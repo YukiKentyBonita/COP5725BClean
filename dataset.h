@@ -22,6 +22,7 @@ using namespace std;
 struct DataFrame {
     vector<string> columns;
     vector<vector<string>> rows;
+    
 };
 
 /*
