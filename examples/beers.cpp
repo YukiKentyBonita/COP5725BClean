@@ -5,49 +5,68 @@
 #include <chrono>
 #include <ctime>
 #include <thread>
+#include "../dataset.h"
+using namespace std;
 
 int main() {
+    Dataset dataset;
     // Paths to the dirty and clean data
-    std::string dirty_path = "../data/dirty.csv";
-    std::string clean_path = "../data/clean.csv";
+    string dirty_path = "/home/zsong/COP5725BClean/data/dirty.csv";
+    string clean_path = "/home/zsong/COP5725BClean/data/clean.csv";
     
-    // Placeholder for loading dirty and clean data
-    // Replace with actual data loading logic
-    std::vector<std::vector<std::string>> dirty_data;
-    std::vector<std::vector<std::string>> clean_data;
-    
-    // Simulating loading data
-    // load_data(dirty_path, dirty_data);  // Placeholder for actual data loading
-    // load_data(clean_path, clean_data);  // Placeholder for actual data loading
+    // Load data using the Dataset methods.
+    DataFrame dirty_data = dataset.get_data(dirty_path);
+    DataFrame clean_data = dataset.get_data(clean_path);
+
+    // Print the dirty data
+    cout << "Dirty Data:" << endl;
+    // Print column headers
+    for (const auto& col : dirty_data.columns) {
+        cout << col << "\t";
+    }
+    cout << endl;
+
+    // Print each row of data
+    /*for (const auto& row : dirty_data.rows) {
+        for (const auto& cell : row) {
+            cout << cell << "\t";
+        }
+        cout << endl;
+    }
+
+    // Similarly, print the clean data
+    cout << "\nClean Data:" << endl;
+    for (const auto& col : clean_data.columns) {
+        cout << col << "\t";
+    }
+    cout << endl;
+
+    for (const auto& row : clean_data.rows) {
+        for (const auto& cell : row) {
+            cout << cell << "\t";
+        }
+        cout << endl;
+    }*/
     
     // Placeholder for UC class initialization and processing
-    std::vector<std::string> attr_type;
-    // Initialize UC and pattern discovery (use actual logic from your C++ implementation)
-    // attr_type = process_UC_data(dirty_data);  // Placeholder for UC processing
-    
-    // Simulate attribute processing
+    vector<string> attr_type;
     attr_type.push_back("attr_type_placeholder");
 
     // Placeholder for applying pattern discovery
-    std::vector<std::string> pattern_discovery = {"pattern1", "pattern2"};  // Example patterns
-    std::cout << "pattern discovery: ";
+    vector<string> pattern_discovery = {"pattern1", "pattern2"};  // Example patterns
+    cout << "pattern discovery: ";
     for (const auto& pat : pattern_discovery) {
-        std::cout << pat << " ";
+        cout << pat << " ";
     }
-    std::cout << std::endl;
-
-    // Apply the UC transformations
-    // Replace with actual logic for transforming data based on attributes
-    // dirty_data = transform_data_based_on_uc(dirty_data, attr_type); // Placeholder
-    // clean_data = transform_data_based_on_uc(clean_data, attr_type); // Placeholder
+    cout << endl;
 
     // Start timing the BayesianClean process
-    auto start_time = std::chrono::high_resolution_clock::now();
+    auto start_time = chrono::high_resolution_clock::now();
 
-    // Placeholder for BayesianClean class - perform Bayesian cleaning (implement actual cleaning logic here)
-    std::vector<std::vector<std::string>> repaired_data = dirty_data;  // Placeholder for repaired data
-    std::vector<std::vector<std::string>> intermediate_repair = dirty_data;  // Placeholder for intermediate repair data
-    std::vector<std::vector<std::string>> actual_clean_data = clean_data;  // Placeholder for actual clean data
+    // Since dirty_data is a DataFrame, we use its 'rows' member.
+    vector<vector<string>> repaired_data = dirty_data.rows;          // Placeholder for repaired data
+    vector<vector<string>> intermediate_repair = dirty_data.rows;      // Placeholder for intermediate repair data
+    vector<vector<string>> actual_clean_data = clean_data.rows;        // Placeholder for actual clean data
 
     // Simulate the actual and repaired error calculations
     double actual_error = 0.05;  // Placeholder for actual error calculation
@@ -55,18 +74,18 @@ int main() {
 
     // Placeholder for Precision, Recall, F1-score calculation
     double P = 0.9, R = 0.85, F = 2 * (P * R) / (P + R);  // Example values for evaluation
-    std::cout << "Repair Pre: " << P << ", Recall: " << R << ", F1-score: " << F << std::endl;
+    cout << "Repair Pre: " << P << ", Recall: " << R << ", F1-score: " << F << endl;
 
     // End timing the process
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time = end_time - start_time;
+    auto end_time = chrono::high_resolution_clock::now();
+    chrono::duration<double> elapsed_time = end_time - start_time;
 
     // Display elapsed time
-    std::cout << "++++++++++++++++++++time using: " << elapsed_time.count() << "+++++++++++++++++++++++" << std::endl;
+    cout << "++++++++++++++++++++time using: " << elapsed_time.count() << "+++++++++++++++++++++++" << endl;
 
     // Print the current date and time
-    std::time_t current_time = std::chrono::system_clock::to_time_t(end_time);
-    std::cout << "date: " << std::ctime(&current_time) << std::endl;
+    time_t current_time = chrono::system_clock::to_time_t(end_time);
+    cout << "date: " << ctime(&current_time) << endl;
 
     return 0;
 }
