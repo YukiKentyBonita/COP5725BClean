@@ -87,17 +87,14 @@ int main() {
     //     cout << endl;
     // }
 
-
-
-
-    // // Placeholder for applying pattern discovery (this will use UC functionality)
-    // cout << "Applying Pattern Discovery..." << endl;
-    // auto patterns = uc.PatternDiscovery();  // Use UC's pattern discovery method
-    // cout << "Pattern discovery: ";
-    // for (const auto& pat : patterns) {
-    //     cout << pat.first << ": " << pat.second << " ";
-    // }
-    // cout << endl;
+    // Placeholder for applying pattern discovery (this will use UC functionality)
+    cout << "Applying Pattern Discovery..." << endl;
+    auto patterns = uc.PatternDiscovery();  // Use UC's pattern discovery method
+    cout << "Pattern discovery: ";
+    for (const auto& pat : patterns) {
+        cout << pat.first << ": " << pat.second << " ";
+    }
+    cout << endl;
 
     // // Start timing the BayesianClean process
     // auto start_time = chrono::high_resolution_clock::now();

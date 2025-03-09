@@ -3,6 +3,10 @@
 #include <sstream>
 #include <algorithm>
 #include <cctype>
+#include <regex>
+#include <vector>
+#include <utility>
+
 
 
 // // DataFrame method to load data from a CSV file
@@ -197,7 +201,7 @@ void UC::edit(const std::string& df_attr, const std::string& uc_attr, const std:
 std::unordered_map<std::string, std::string> UC::PatternDiscovery() {
     std::unordered_map<std::string, std::string> patterns;
     for (const auto& col : data.columns) {
-        std::string pattern = discover_pattern_in_column(col);  // Placeholder function for pattern discovery
+        std::string pattern = discover_pattern_in_column(col);
         patterns[col] = pattern;
     }
     return patterns;
@@ -214,6 +218,71 @@ std::vector<std::string> UC::get_column_values(const std::string& attr) {
 }
 
 // Placeholder function to simulate pattern discovery
+
+// Improved helper function to extract a more advanced pattern from a column's data
 std::string UC::discover_pattern_in_column(const std::string& col) {
-    return "Regex for " + col;  // Return a dummy regex pattern
+    std::vector<std::string> values = get_column_values(col);
+    if (values.empty()) return "";
+
+    // Preprocess: trim whitespace for each value (optional)
+    for (auto &val : values) {
+        // A simple trim (you could use a more robust version)
+        size_t start = val.find_first_not_of(" \t");
+        size_t end = val.find_last_not_of(" \t");
+        if (start != std::string::npos && end != std::string::npos)
+            val = val.substr(start, end - start + 1);
+    }
+
+    // Define candidate regex patterns.
+    std::vector<std::pair<std::string, std::regex>> candidates = {
+        {"\\d+(\\.\\d+)?", std::regex("^\\d+(\\.\\d+)?$")},                  // Numeric (integer or float)
+        {"[A-Za-z]+", std::regex("^[A-Za-z]+$")},                             // Alphabetical only
+        {"[A-Za-z0-9]+", std::regex("^[A-Za-z0-9]+$")},                       // Alphanumeric
+        {"\\d{4}-\\d{2}-\\d{2}", std::regex("^\\d{4}-\\d{2}-\\d{2}$")},       // Date in YYYY-MM-DD
+        {"\\w+@\\w+\\.\\w+", std::regex("^\\w+@\\w+\\.\\w+$")},               // Email (simple)
+        {"[A-Za-z\\.\\s]+", std::regex("^[A-Za-z\\.\\s]+$")}                  // Allow letters, dots, and spaces
+    };
+
+    // First, check for a perfect match.
+    for (const auto &candidate : candidates) {
+        bool allMatch = true;
+        for (const auto &val : values) {
+            if (val.empty()) continue;
+            if (!std::regex_match(val, candidate.second)) {
+                allMatch = false;
+                break;
+            }
+        }
+        if (allMatch) {
+            return candidate.first;
+        }
+    }
+
+    // Compute match rate for each candidate.
+    int bestCandidateIndex = -1;
+    double bestMatchRate = 0.0;
+    for (size_t i = 0; i < candidates.size(); i++) {
+        int matchCount = 0;
+        int total = 0;
+        for (const auto &val : values) {
+            if (val.empty()) continue;
+            total++;
+            if (std::regex_match(val, candidates[i].second)) {
+                matchCount++;
+            }
+        }
+        double rate = (total > 0) ? static_cast<double>(matchCount) / total : 0.0;
+        if (rate > bestMatchRate) {
+            bestMatchRate = rate;
+            bestCandidateIndex = static_cast<int>(i);
+        }
+    }
+
+    // Lowered threshold to 0.7 for example purposes
+    if (bestMatchRate >= 0.8 && bestCandidateIndex != -1) {
+        return candidates[bestCandidateIndex].first;
+    }
+
+    // Fallback generic pattern.
+    return ".+";
 }
