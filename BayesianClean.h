@@ -16,8 +16,8 @@
 class BayesianClean
 {
 public:
-    BayesianClean(std::vector<std::vector<std::string>> dirty_df,
-                  std::vector<std::vector<std::string>> clean_df,
+    BayesianClean(DataFrame dirty_df,
+                  DataFrame clean_df,
                   std::string infer_strategy = "PIPD",
                   double tuple_prun = 1.0,
                   int maxiter = 1,
@@ -41,9 +41,9 @@ public:
 
 private:
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time, end_time;
-    std::vector<std::vector<std::string>> dirty_data;
-    std::vector<std::vector<std::string>> clean_data;
-    std::unordered_map<std::string, std::string> attr_type;
+    DataFrame dirty_data;
+    DataFrame clean_data;
+    map<string, AttrInfo> attr_type;
     bool fix_edge;
     std::string model_path;
     std::string model_save_path;

@@ -1,9 +1,9 @@
 #include "BayesianClean.h"
 #include <algorithm>
 #include <numeric>
+#include "dataset.h"
 
-BayesianClean::BayesianClean(std::vector<std::vector<std::string>> dirty_df,
-                             std::vector<std::vector<std::string>> clean_df,
+BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
                              std::string infer_strategy,
                              double tuple_prun,
                              int maxiter,
@@ -11,7 +11,7 @@ BayesianClean::BayesianClean(std::vector<std::vector<std::string>> dirty_df,
                              int chunksize,
                              std::string model_path,
                              std::string model_save_path,
-                             std::unordered_map<std::string, std::string> attr_type,
+                             map<string, AttrInfo> attr_type,
                              bool fix_edge,
                              std::string model_choice)
     : dirty_data(dirty_df), clean_data(clean_df), infer_strategy(infer_strategy),
@@ -27,11 +27,11 @@ BayesianClean::BayesianClean(std::vector<std::vector<std::string>> dirty_df,
     dirty_data = dirty_df;
     clean_data = clean_df;
 
-    auto data = dataLoader->preProcessData(dirty_data, attr_type);
+    auto data = dataLoader->pre_process_data(dirty_data, attr_type);
     std::cout << "+++++++++data loading complete++++++++" << std::endl;
 
     std::cout << "+++++++++computing error cell++++++++" << std::endl;
-    auto actual_error = dataLoader->getError(dirty_data, clean_data);
+    auto actual_error = dataLoader->get_error(dirty_data, clean_data);
     std::cout << "error: " << actual_error.size() << std::endl;
     std::cout << "+++++++++error cell computing complete++++++++" << std::endl;
 
