@@ -6,16 +6,17 @@
 #include <ctime>
 #include <thread>
 #include "../dataset.h"
-#include "../include/UserConstraints.h"  // Include UC class header
+#include "../include/UserConstraints.h" // Include UC class header
 using namespace std;
 
-int main() {
+int main()
+{
     Dataset dataset;
     // Paths to the dirty and clean data
-    string dirty_path = "/Users/yukikentybonita/Desktop/FSU/COP5725BClean/data/dirty.csv";
-    string clean_path = "/Users/yukikentybonita/Desktop/FSU/COP5725BClean/data/clean.csv";
-    string json_path = "/Users/yukikentybonita/Desktop/FSU/COP5725BClean/json/beers.json";
-    
+    string dirty_path = "../data/dirty.csv";
+    string clean_path = "../data/clean.csv";
+    string json_path = "../json/beers.json";
+
     // Load data using the Dataset methods.
     DataFrame dirty_data = dataset.get_data(dirty_path);
     DataFrame clean_data = dataset.get_data(clean_path);
@@ -51,20 +52,21 @@ int main() {
     // }
     //=================debug for dataset.cpp======================
 
-    
     // // Initialize UC (User Constraints) with dirty data
     UC uc(dirty_data);
     // **Calling build_from_json()**
     cout << "Loading constraints from JSON file..." << endl;
-    uc.build_from_json(json_path);  // Call build_from_json to load constraints from the JSON file
+    uc.build_from_json(json_path); // Call build_from_json to load constraints from the JSON file
 
     // **Print out the content of the JSON file (loaded into UC)**
     // Print out the content of the JSON file (loaded into UC)
     cout << "User Constraints after loading from JSON:" << endl;
     auto updated_uc_data = uc.get_uc();
-    for (const auto& [key, value] : updated_uc_data) {
+    for (const auto &[key, value] : updated_uc_data)
+    {
         cout << key << " : ";
-        for (const auto& [attr, val] : value) {
+        for (const auto &[attr, val] : value)
+        {
             cout << attr << "=" << val << " ";
         }
         cout << endl;
@@ -89,9 +91,10 @@ int main() {
 
     // Placeholder for applying pattern discovery (this will use UC functionality)
     cout << "Applying Pattern Discovery..." << endl;
-    auto patterns = uc.PatternDiscovery();  // Use UC's pattern discovery method
+    auto patterns = uc.PatternDiscovery(); // Use UC's pattern discovery method
     cout << "Pattern discovery: ";
-    for (const auto& pat : patterns) {
+    for (const auto &pat : patterns)
+    {
         cout << pat.first << ": " << pat.second << " ";
     }
     cout << endl;
@@ -101,11 +104,15 @@ int main() {
 
     // Simulating repair data
     map<string, AttrInfo> attr_type;
-    for (const auto& [col, constraints] : updated_uc_data) {
-        if (constraints.find("type") != constraints.end()) {
-            attr_type[col] = {constraints.at("type")};  // Extract type from UC
-        } else {
-            attr_type[col] = {"Unknown"};  // Ensure all attributes are included
+    for (const auto &[col, constraints] : updated_uc_data)
+    {
+        if (constraints.find("type") != constraints.end())
+        {
+            attr_type[col] = {constraints.at("type")}; // Extract type from UC
+        }
+        else
+        {
+            attr_type[col] = {"Unknown"}; // Ensure all attributes are included
         }
     }
 
