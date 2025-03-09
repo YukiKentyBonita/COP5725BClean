@@ -176,6 +176,11 @@ void UC::build_from_json(const std::string& jpath) {
                 }
             }
         }
+        // If the last attribute block wasn't closed with a '}', add it now.
+        if (insideBlock && !currentAttr.empty()) {
+            res[currentAttr] = constraintMap;
+        }
+
         file.close();
     } catch (const std::exception& e) {
         std::cout << "Error reading JSON: " << e.what() << std::endl;
