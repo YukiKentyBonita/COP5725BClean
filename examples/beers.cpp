@@ -120,6 +120,26 @@ int main()
     dirty_data = dataset.get_real_data(dirty_data, attr_type);
     clean_data = dataset.get_real_data(dirty_data, attr_type);
 
+    //================= Test pre_process_data =======================
+    // Call pre_process_data to preprocess the dirty data for BN training and cleaning
+    cout << "Preprocessing the dirty data..." << endl;
+    DataFrame preprocessed_data = dataset.pre_process_data(dirty_data, attr_type);
+
+    // Print out the preprocessed data for verification
+    cout << "Preprocessed Data:" << endl;
+    for (const auto& col : preprocessed_data.columns) {
+        cout << col << "\t";
+    }
+    cout << endl;
+
+    for (const auto& row : preprocessed_data.rows) {
+        for (const auto& cell : row) {
+            cout << cell << "\t";
+        }
+        cout << endl;
+    }
+    //================= End of Test =======================
+
     // // **Print cleaned DataFrame**
     // cout << "\nFiltered DataFrame after applying UC constraints:\n";
     // dataset.print_dataframe(dirty_data);

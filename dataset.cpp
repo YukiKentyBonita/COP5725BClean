@@ -119,37 +119,46 @@ DataFrame Dataset::pre_process_data(const DataFrame& data, const map<string, Att
     for (const auto& kv : attr_type) {
         attrs.push_back(kv.first);
     }
+    
     DataFrame df_train;
     df_train.columns = attrs;
     map<string, int> colIndex;
     for (int j = 0; j < data.columns.size(); j++) {
         colIndex[data.columns[j]] = j;
     }
+    
     for (int i = 0; i < data.rows.size(); i++) {
         const auto& row = data.rows[i];
-        vector<vector<string>> add_lines;
-        vector<string> attr_line;
+        vector<vector<string>> candidate_values_per_attr;
+        vector<string> attr_names;
+        
         for (const auto& at : attrs) {
-            attr_line.push_back(at);
+            attr_names.push_back(at);
             vector<string> candidates;
-            string cell_value = tags;
+            string cell_value = tags;  // Initialize with default value for missing data
+            
             if (colIndex.find(at) != colIndex.end()) {
                 cell_value = row[colIndex[at]];
             }
+            
             if (!attr_type.at(at).pattern.empty()) {
                 regex pattern(attr_type.at(at).pattern);
                 smatch match;
+                
                 if (regex_search(cell_value, match, pattern)) {
                     string val = match.str(0);
                     if (attr_type.at(at).type == "Numerical") {
                         try {
                             double num = stod(val);
                             if (floor(num) == num) {
-                                val = to_string(static_cast<int>(num));
+                                val = to_string(static_cast<int>(num));  // Convert to integer if whole number
                             } else {
                                 val = to_string(num);
                             }
-                        } catch (...) {
+                        } catch (const std::invalid_argument& e) {
+                            // Handle invalid conversion
+                        } catch (const std::out_of_range& e) {
+                            // Handle out-of-range conversion
                         }
                     }
                     candidates.push_back(val);
@@ -159,13 +168,18 @@ DataFrame Dataset::pre_process_data(const DataFrame& data, const map<string, Att
             } else {
                 candidates.push_back(cell_value);
             }
-            add_lines.push_back(candidates);
+            candidate_values_per_attr.push_back(candidates);
         }
-        vector<vector<string>> new_rows = change_add_line(row, i, add_lines, attr_line, attrs);
+
+        vector<vector<string>> new_rows = change_add_line(row, i, candidate_values_per_attr, attr_names, attrs);
+        
+        // Efficiently append rows
+        df_train.rows.reserve(df_train.rows.size() + new_rows.size());
         for (auto& new_row : new_rows) {
             df_train.rows.push_back(new_row);
         }
     }
+    
     return df_train;
 }
 

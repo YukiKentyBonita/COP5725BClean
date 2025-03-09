@@ -8,6 +8,7 @@
 #include <string>
 #include <regex>
 #include <map>
+#include <unordered_map>
 #include <thread>
 #include <mutex>
 #include <cmath>
