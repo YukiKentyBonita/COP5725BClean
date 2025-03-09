@@ -111,10 +111,11 @@ int main() {
 
     // **Call get_real_data() correctly**
     dirty_data = dataset.get_real_data(dirty_data, attr_type);
+    clean_data = dataset.get_real_data(dirty_data, attr_type);
 
-    // **Print cleaned DataFrame**
-    cout << "\nFiltered DataFrame after applying UC constraints:\n";
-    dataset.print_dataframe(dirty_data);
+    // // **Print cleaned DataFrame**
+    // cout << "\nFiltered DataFrame after applying UC constraints:\n";
+    // dataset.print_dataframe(dirty_data);
 
     // // Simulate the actual and repaired error calculations
     // double actual_error = 0.05;  // Placeholder for actual error calculation
