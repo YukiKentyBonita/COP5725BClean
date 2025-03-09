@@ -1,5 +1,8 @@
 #include "../include/UserConstraints.h"
 #include "../dataset.h"  // Include dataset.h to get DataFrame definition
+#include <sstream>
+#include <algorithm>
+#include <cctype>
 
 
 // // DataFrame method to load data from a CSV file
@@ -85,31 +88,88 @@ void UC::build(const std::string& attr, const std::string& type, const std::stri
     std::cout << "User constraint for attribute '" << attr << "' has been set." << std::endl;
 }
 
-// Build UC from a JSON file
+
+// Helper function to trim whitespace from both ends of a string
+std::string trim(const std::string &s) {
+    auto start = s.begin();
+    while (start != s.end() && std::isspace(*start)) {
+        start++;
+    }
+    auto end = s.end();
+    do {
+        end--;
+    } while (std::distance(start, end) > 0 && std::isspace(*end));
+    return std::string(start, end + 1);
+}
+
 void UC::build_from_json(const std::string& jpath) {
     try {
         std::ifstream file(jpath);
         if (!file.is_open()) {
             throw std::runtime_error("Cannot open JSON file.");
         }
-
         std::string line;
+        std::string currentAttr = "";
+        std::unordered_map<std::string, std::string> constraintMap;
+        bool insideBlock = false;
+
         while (std::getline(file, line)) {
-            // Look for "pattern" field in the JSON-like data
-            if (line.find("pattern") != std::string::npos) {
-                // Extract the part after ":"
-                size_t pos = line.find(":");
-                std::string pattern = line.substr(pos + 1);
-                
-                // Handle the case where pattern is "null" in the JSON
-                if (pattern == "null") {
-                    pattern = "";  // Set to empty string or handle as needed
+            line = trim(line);
+            // Skip empty lines or just braces
+            if (line.empty() || line == "{" || line == "}" || line == "},")
+                continue;
+
+            // Check if line defines an attribute block e.g., "ounces": {
+            size_t pos = line.find("\":");
+            if (pos != std::string::npos && line.find("{") != std::string::npos) {
+                // Finish previous attribute block if any
+                if (insideBlock && !currentAttr.empty()) {
+                    res[currentAttr] = constraintMap;
+                    constraintMap.clear();
                 }
-                
-                // Now add the pattern to the map
-                std::unordered_map<std::string, std::string> pattern_map;
-                pattern_map["pattern"] = pattern;  // Assign the pattern (either empty or valid string)
-                res["pattern"] = pattern_map;
+                // Extract attribute name, removing leading quote
+                currentAttr = line.substr(1, pos - 1);
+                insideBlock = true;
+                continue;
+            }
+
+            // If inside a block, parse key-value pairs until a closing brace
+            if (insideBlock) {
+                // If we reach the end of the block for an attribute
+                if (line[0] == '}') {
+                    // Save current attribute's constraints
+                    if (!currentAttr.empty()) {
+                        res[currentAttr] = constraintMap;
+                    }
+                    constraintMap.clear();
+                    currentAttr = "";
+                    insideBlock = false;
+                    continue;
+                }
+
+                // Expecting a line like "type": "Numerical", or "min_length": 0,
+                // Remove comma at the end if present
+                if (line.back() == ',')
+                    line.pop_back();
+                // Split at colon
+                size_t colonPos = line.find(':');
+                if (colonPos != std::string::npos) {
+                    std::string key = trim(line.substr(0, colonPos));
+                    std::string value = trim(line.substr(colonPos + 1));
+                    // Remove quotes from key if present
+                    if (!key.empty() && key.front() == '"') {
+                        key = key.substr(1, key.size() - 2);
+                    }
+                    // Process value: remove quotes if string, or handle null
+                    if (!value.empty() && value.front() == '"') {
+                        // Remove leading and trailing quotes
+                        value = value.substr(1, value.size() - 2);
+                    } else if (value == "null") {
+                        value = "";  // convert JSON null to empty string
+                    }
+                    // Store the key-value pair in constraintMap
+                    constraintMap[key] = value;
+                }
             }
         }
         file.close();
@@ -117,7 +177,6 @@ void UC::build_from_json(const std::string& jpath) {
         std::cout << "Error reading JSON: " << e.what() << std::endl;
     }
 }
-
 // Print the user constraints for an attribute
 void UC::edit(const std::string& df_attr, const std::string& uc_attr, const std::string& uc_v) {
     if (res.find(df_attr) == res.end()) {
