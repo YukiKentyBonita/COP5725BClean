@@ -51,6 +51,8 @@ public:
 
     // Filters the DataFrame to include only columns specified in attr_type.
     DataFrame get_real_data(const DataFrame& data, const map<string, AttrInfo>& attr_type);
+     // Function to print DataFrame (for debugging)
+    void print_dataframe(const DataFrame& df) const;
 
     // Preprocesses the data by applying regex patterns and generating candidate rows.
     DataFrame pre_process_data(const DataFrame& data, const map<string, AttrInfo>& attr_type);

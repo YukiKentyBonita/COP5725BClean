@@ -36,15 +36,22 @@ DataFrame Dataset::get_data(const string& path) {
     return df;
 }
 
+// Function to filter columns and replace missing values
 DataFrame Dataset::get_real_data(const DataFrame& data, const map<string, AttrInfo>& attr_type) {
     DataFrame df;
+
+    // Extract only relevant column names
     for (const auto& kv : attr_type) {
         df.columns.push_back(kv.first);
     }
-    map<string, int> colIndex;
-    for (int i = 0; i < data.columns.size(); i++) {
+
+    // Map column names to their index in the original DataFrame
+    unordered_map<string, int> colIndex;
+    for (size_t i = 0; i < data.columns.size(); i++) {
         colIndex[data.columns[i]] = i;
     }
+
+    // Copy rows, preserving only selected columns
     for (const auto& row : data.rows) {
         vector<string> newRow;
         for (const auto& col : df.columns) {
@@ -53,13 +60,29 @@ DataFrame Dataset::get_real_data(const DataFrame& data, const map<string, AttrIn
                 value = row[colIndex[col]];
             }
             if (value.empty()) {
-                value = tags;
+                value = tags;  // Fill missing values with `tags`
             }
             newRow.push_back(value);
         }
         df.rows.push_back(newRow);
     }
     return df;
+}
+
+// Function to print DataFrame (for debugging)
+void Dataset::print_dataframe(const DataFrame& df) const {
+    cout << "Filtered DataFrame:\n";
+    for (const auto& col : df.columns) {
+        cout << col << "\t";
+    }
+    cout << "\n";
+
+    for (const auto& row : df.rows) {
+        for (const auto& cell : row) {
+            cout << cell << "\t";
+        }
+        cout << "\n";
+    }
 }
 
 void Dataset::dfs_line(vector<vector<string>>& re_lines,

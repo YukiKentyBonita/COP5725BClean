@@ -12,9 +12,9 @@ using namespace std;
 int main() {
     Dataset dataset;
     // Paths to the dirty and clean data
-    string dirty_path = "/home/zsong/COP5725BClean/data/dirty.csv";
-    string clean_path = "/home/zsong/COP5725BClean/data/clean.csv";
-    string json_path = "/home/zsong/COP5725BClean/json/beers.json";
+    string dirty_path = "/Users/yukikentybonita/Desktop/FSU/COP5725BClean/data/dirty.csv";
+    string clean_path = "/Users/yukikentybonita/Desktop/FSU/COP5725BClean/data/clean.csv";
+    string json_path = "/Users/yukikentybonita/Desktop/FSU/COP5725BClean/json/beers.json";
     
     // Load data using the Dataset methods.
     DataFrame dirty_data = dataset.get_data(dirty_path);
@@ -99,10 +99,22 @@ int main() {
     // // Start timing the BayesianClean process
     // auto start_time = chrono::high_resolution_clock::now();
 
-    // // Simulating repair data
-    // vector<vector<string>> repaired_data = dirty_data.data;          // Placeholder for repaired data
-    // vector<vector<string>> intermediate_repair = dirty_data.data;      // Placeholder for intermediate repair data
-    // vector<vector<string>> actual_clean_data = clean_data.data;        // Placeholder for actual clean data
+    // Simulating repair data
+    map<string, AttrInfo> attr_type;
+    for (const auto& [col, constraints] : updated_uc_data) {
+        if (constraints.find("type") != constraints.end()) {
+            attr_type[col] = {constraints.at("type")};  // Extract type from UC
+        } else {
+            attr_type[col] = {"Unknown"};  // Ensure all attributes are included
+        }
+    }
+
+    // **Call get_real_data() correctly**
+    dirty_data = dataset.get_real_data(dirty_data, attr_type);
+
+    // **Print cleaned DataFrame**
+    cout << "\nFiltered DataFrame after applying UC constraints:\n";
+    dataset.print_dataframe(dirty_data);
 
     // // Simulate the actual and repaired error calculations
     // double actual_error = 0.05;  // Placeholder for actual error calculation
