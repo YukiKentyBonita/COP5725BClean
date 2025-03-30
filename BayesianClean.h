@@ -10,7 +10,7 @@
 #include "Dataset.h"
 // #include "Compensative.h"
 // #include "BN_Structure.h"
-// #include "Inference.h"
+#include "include/Inference.h"
 // #include "CompensativeParameter.h"
 
 class BayesianClean

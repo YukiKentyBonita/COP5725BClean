@@ -13,9 +13,9 @@ int main()
 {
     Dataset dataset;
     // Paths to the dirty and clean data
-    string dirty_path = "../data/dirty.csv";
-    string clean_path = "../data/clean.csv";
-    string json_path = "../json/beers.json";
+    string dirty_path = "/home/zsong/COP5725BClean/data/dirty.csv";
+    string clean_path = "/home/zsong/COP5725BClean/data/clean.csv";
+    string json_path = "/home/zsong/COP5725BClean/json/beers.json";
 
     // Load data using the Dataset methods.
     DataFrame dirty_data = dataset.get_data(dirty_path);
@@ -119,6 +119,20 @@ int main()
     // **Call get_real_data() correctly**
     dirty_data = dataset.get_real_data(dirty_data, attr_type);
     clean_data = dataset.get_real_data(dirty_data, attr_type);
+    // Print column headers
+    cout << "get real data: ";
+    for (const auto& col : dirty_data.columns) {
+        cout << col << "\t";
+    }
+    cout << endl;
+
+    for (const auto& row : dirty_data.rows) {
+        for (const auto& cell : row) {
+            cout << cell << "\t";
+        }
+        cout << endl;
+    }
+    cout << endl;
 
     //================= Test pre_process_data =======================
     // Call pre_process_data to preprocess the dirty data for BN training and cleaning
