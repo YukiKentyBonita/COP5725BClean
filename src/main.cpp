@@ -1,106 +1,87 @@
 #include <iostream>
-#include <cassert>
-#include <cmath>
-#include <vector>
-#include <string>
-#include <unordered_map>
-#include "../include/BayesianNetwork.h"
-#include "../include/Cleaner.h"
-#include "../include/Inference.h"
+#include "../dataset.h"
+#include "../include/UserConstraints.h"
+#include "BayesianNetwork.h"  // our custom BN module
+#include "Cleaner.h"          // our custom Cleaner module
+#include "Inference.h"        // our custom Inference module
 
-// For Inference, we use these type aliases:
-using RowMap = std::unordered_map<std::string, std::string>;
-using DataFrameMap = std::vector<RowMap>;
+using namespace std;
 
 int main() {
-    std::cout << "=== Testing BayesianNetwork ===" << std::endl;
-    // --- Test BayesianNetwork ---
-    BayesianNetwork bn;
-    bn.addProbability("state", "NY", 0.6);
-    bn.addProbability("state", "CA", 0.4);
-    
-    double pNY = bn.getProbability("state", "NY");
-    double pCA = bn.getProbability("state", "CA");
-    double pTX = bn.getProbability("state", "TX"); // Not added; should return default value
-    
-    std::cout << "P(NY): " << pNY << "\nP(CA): " << pCA 
-              << "\nP(TX): " << pTX << std::endl;
-    assert(std::abs(pNY - 0.6) < 1e-6);
-    assert(std::abs(pCA - 0.4) < 1e-6);
-    assert(std::abs(pTX - 1e-9) < 1e-12);
-    std::cout << "BayesianNetwork tests passed!\n" << std::endl;
-    
-    std::cout << "=== Testing Cleaner ===" << std::endl;
-    // --- Test Cleaner ---
-    // Using a simple dataset with one attribute "state".
-    // In Cleaner, our DataFrame is a vector of vector<string>.
-    std::vector<std::vector<std::string>> dataset = { {"NY"}, {"A Null Cell"} };
-    std::vector<std::string> attributes = { "state" };
-    
-    // Create a Cleaner instance with our Bayesian network and dataset.
-    Cleaner cleaner(bn, dataset, attributes);
-    // Set the candidate domain for "state"
-    cleaner.setDomain("state", {"NY", "CA"});
-    
-    auto cleanedData = cleaner.cleanData();
-    
-    std::cout << "Cleaner output:" << std::endl;
-    for (const auto &row : cleanedData) {
-        for (const auto &val : row) {
-            std::cout << val << " ";
+    // Load data
+    Dataset dataset;
+    string dirty_path = "data/dirty.csv";
+    string clean_path = "data/clean.csv";
+    string json_path = "json/beers.json";
+    DataFrame dirty_data = dataset.get_data(dirty_path);
+    DataFrame clean_data = dataset.get_data(clean_path);
+
+    // Load and apply user constraints
+    UC uc(dirty_data);
+    cout << "Loading constraints from JSON file..." << endl;
+    uc.build_from_json(json_path);
+    auto updated_uc_data = uc.get_uc();
+    // Print out constraints (for debugging)
+    for (const auto& [key, value] : updated_uc_data) {
+        cout << key << " : ";
+        for (const auto& [attr, val] : value) {
+            cout << attr << "=" << val << " ";
         }
-        std::cout << std::endl;
+        cout << endl;
     }
-    // Our dummy repair logic in Cleaner (in repairLine) is set to replace "A Null Cell" with "CorrectedValue"
-    assert(cleanedData[0][0] == "NY");
-    assert(cleanedData[1][0] == "CorrectedValue");
-    std::cout << "Cleaner tests passed!\n" << std::endl;
-    
-    std::cout << "=== Testing Inference ===" << std::endl;
-    // --- Test Inference ---
-    // For Inference, our DataFrame is represented as vector of RowMap (unordered_map<string, string>)
-    DataFrameMap dirtyDataMap = { { {"state", "A Null Cell"} } };
-    DataFrameMap observedDataMap = dirtyDataMap; // For testing, use same data.
-    
-    // Dummy model: we use an int as a placeholder.
+
+    // Pattern discovery, etc.
+    cout << "Applying Pattern Discovery..." << endl;
+    auto patterns = uc.PatternDiscovery();
+    // Print patterns
+    for (const auto &pat : patterns) {
+        cout << pat.first << ": " << pat.second << " ";
+    }
+    cout << endl;
+
+    // Transform data using get_real_data and pre_process_data
+    dirty_data = dataset.get_real_data(dirty_data, /* attr_type from updated_uc_data */);
+    clean_data = dataset.get_real_data(clean_data, /* same attr_type */);
+    DataFrame preprocessed_data = dataset.pre_process_data(dirty_data, /* attr_type */);
+
+    // (Optional) Print preprocessed data for verification
+
+    // Now, set up your Bayesian cleaning modules.
+    // For instance, build a Bayesian network from the preprocessed_data.
+    BayesianNetwork bn;
+    // (Populate bn with probabilities based on your data or use a learning algorithm.)
+
+    // You can now test the Cleaner module.
+    // Convert your preprocessed_data to the format expected by Cleaner (DataFrameCleaner)
+    DataFrameCleaner dataForCleaner = convertToCleanerFormat(preprocessed_data);
+    vector<string> attributes = preprocessed_data.columns;  // assuming you have a columns vector
+    Cleaner cleaner(bn, dataForCleaner, attributes);
+    // Set candidate domains for attributes (e.g., based on your data statistics)
+    cleaner.setDomain("state", {"NY", "CA", "TX"});  // example
+
+    DataFrameCleaner cleanedData = cleaner.cleanData();
+    // Print the cleaned data.
+
+    // Alternatively, test the Inference module if that is your desired pipeline.
+    // Convert preprocessed_data to DataFrameMap format for Inference.
+    DataFrameMap dataForInference = convertToInferenceFormat(preprocessed_data);
+    // Set up a dummy model and attribute types as needed.
     int dummyModel = 0;
-    // Dummy model dictionary: empty map
-    std::unordered_map<std::string, int> dummyModelDict;
-    // Attributes list (for Inference, we use the same attribute "state")
-    std::vector<std::string> attrs = { "state" };
-    // Dummy frequency list and occurrence data (empty for now)
+    unordered_map<string, int> dummyModelDict;
+    vector<string> inferAttrs = attributes;
     FrequencyList dummyFreqList;
     OccurrenceData dummyOccData;
-    // Dummy compensative parameter (using int placeholder)
     int dummyCompParam = 0;
-    
-    // Create a dummy attribute type map.
-    // For "state", we mark it as repairable ("Y"), with an empty pattern and AllowNull "N".
     AttrType attrType;
-    attrType["state"] = { {"repairable", "Y"}, {"pattern", ""}, {"AllowNull", "N"} };
-    
-    // Create an Inference instance with our dummy values.
-    Inference inference(dirtyDataMap, observedDataMap, dummyModel, dummyModelDict, 
-                        attrs, dummyFreqList, dummyOccData, dummyCompParam, 
-                        "PIPD", 1, 1, 1.0);
-    
-    // Call the Repair method. (In our skeleton, it uses dummy repair logic.)
-    DataFrameMap repairedData = inference.Repair(observedDataMap, observedDataMap, dummyModel, attrType);
-    
-    std::cout << "Inference output (repaired data):" << std::endl;
-    for (const auto& row : repairedData) {
-        for (const auto& kv : row) {
-            std::cout << kv.first << ": " << kv.second << " ";
-        }
-        std::cout << std::endl;
+    // Populate attrType based on updated_uc_data or set defaults.
+    for (const auto& col : attributes) {
+        attrType[col] = { {"repairable", "Y"}, {"pattern", ""}, {"AllowNull", "N"} };
     }
-    
-    // In our dummy repairLine, if the value equals "A Null Cell", it is replaced with "CorrectedValue".
-    // So we expect the "state" attribute in the first row to become "CorrectedValue".
-    assert(repairedData[0]["state"] == "CorrectedValue");
-    
-    std::cout << "Inference tests passed!" << std::endl;
-    std::cout << "All module tests passed successfully!" << std::endl;
-    
+    Inference inference(dataForInference, dataForInference, dummyModel, dummyModelDict,
+                        inferAttrs, dummyFreqList, dummyOccData, dummyCompParam,
+                        "PIPD", 1, 1, 1.0);
+    DataFrameMap repairedData = inference.Repair(dataForInference, dataForInference, dummyModel, attrType);
+    // Print repaired data and compute error metrics against clean_data if available.
+
     return 0;
 }

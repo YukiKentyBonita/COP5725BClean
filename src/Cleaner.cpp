@@ -3,30 +3,30 @@
 #include <iostream>
 #include <algorithm>
 
-// Constructor: initialize with the Bayesian network, dataset, and attributes.
-Cleaner::Cleaner(BayesianNetwork& bn, const DataFrame& data, const std::vector<std::string>& attributes)
+// Constructor: initializes the Cleaner with the provided Bayesian network, dataset, and attributes.
+Cleaner::Cleaner(BayesianNetwork& bn, const DataFrameCleaner& data, const std::vector<std::string>& attributes)
     : bn(bn), data(data), attributes(attributes)
 {
-    // Optionally, initialize the domain for each attribute to an empty vector.
+    // Initialize the domain for each attribute as empty.
     for (const auto& attr : attributes) {
         domain[attr] = std::vector<std::string>();
     }
 }
 
-// Set the domain (list of candidate values) for an attribute.
+// Sets the candidate domain for an attribute.
 void Cleaner::setDomain(const std::string& attribute, const std::vector<std::string>& values) {
     domain[attribute] = values;
 }
 
-// The cleanData method iterates over each cell, computes a probability for each candidate,
-// and selects the candidate with the highest score.
-// For simplicity, the scoring is computed as the logarithm of the probability from the BN.
-DataFrame Cleaner::cleanData() {
+// The cleanData method applies a simple repair logic:
+// For each cell, it checks the candidate domain and picks the candidate with the highest log-probability
+// (as obtained from the Bayesian network). If the current value is the best, it remains unchanged.
+DataFrameCleaner Cleaner::cleanData() {
     int n = data.size();
     int m = attributes.size();
-    DataFrame cleanedData = data;  // Start with the original data
+    DataFrameCleaner cleanedData = data;  // Start with the original data
 
-    // Iterate over every row and column.
+    // Iterate over each row and column.
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
             std::string attr = attributes[j];
@@ -35,8 +35,7 @@ DataFrame Cleaner::cleanData() {
             double bestScore = std::log(bn.getProbability(attr, currentValue));
             std::string bestCandidate = currentValue;
 
-            // Look up candidate values from the domain.
-            // In a full implementation, you might generate these candidates dynamically.
+            // For each candidate in the domain, compute its log probability.
             for (const std::string& candidate : domain[attr]) {
                 double score = std::log(bn.getProbability(attr, candidate));
                 if (score > bestScore) {
@@ -44,7 +43,7 @@ DataFrame Cleaner::cleanData() {
                     bestCandidate = candidate;
                 }
             }
-            // Replace the cell with the candidate that has the highest probability.
+            // Replace the cell value with the candidate that has the highest score.
             cleanedData[i][j] = bestCandidate;
         }
     }

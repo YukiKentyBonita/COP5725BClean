@@ -6,22 +6,21 @@
 #include <unordered_map>
 #include <map>
 
-// For simplicity, we represent a row of the dataset as a map from attribute names to values.
-using Row = std::unordered_map<std::string, std::string>;
-// And a DataFrame as a vector of rows.
-using DataFrame = std::vector<Row>;
+// For Inference, we represent a row as an unordered_map from attribute names to values.
+using RowMap = std::unordered_map<std::string, std::string>;
+// And the dataset as a vector of such rows.
+using DataFrameMap = std::vector<RowMap>;
 
 // Placeholder types for model and compensative parameter.
-// In a complete implementation, these would be classes representing your BN, CPD functions, etc.
-using Model = int; // Replace with your Bayesian network model class
+// In a complete implementation, these would be replaced with proper classes.
+using Model = int; // Placeholder for Bayesian network model.
 using ModelDict = std::unordered_map<std::string, Model>;
-using CompensativeParameterType = int; // Replace with your actual type
+using CompensativeParameterType = int; // Placeholder.
 
-// For attribute type settings, we assume a map from attribute name to a map of string settings.
+// For attribute type settings, assume a map from attribute name to a map of string settings.
 using AttrType = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
 
-// Frequency list and occurrence data are complex nested maps.
-// Here we use a simplified placeholder.
+// FrequencyList and OccurrenceData are also placeholders.
 using FrequencyList = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
 using OccurrenceData = std::unordered_map<std::string, 
                           std::unordered_map<std::string, 
@@ -30,10 +29,10 @@ using OccurrenceData = std::unordered_map<std::string,
 
 class Inference {
 public:
-    // Constructor: pass in dirty_data, observed data, model, model_dict, attributes list, frequency list, occurrence data,
-    // compensative parameter, inference strategy, chunk size, number of workers, and tuple pruning threshold.
-    Inference(const DataFrame& dirtyData,
-              const DataFrame& data,
+    // Constructor: pass in dirtyData, observed data, model, model dictionary, attributes list,
+    // frequency list, occurrence data, compensative parameter, and various strategy parameters.
+    Inference(const DataFrameMap& dirtyData,
+              const DataFrameMap& data,
               const Model& model,
               const ModelDict& modelDict,
               const std::vector<std::string>& attrs,
@@ -45,26 +44,25 @@ public:
               int numWorker = 1,
               double tuplePrun = 1.0);
 
-    // Repair method – returns a repaired DataFrame.
-    DataFrame Repair(const DataFrame& data, const DataFrame& cleanData,
-                     const Model& model,
-                     const AttrType& attrType);
+    // Repair method – returns a repaired dataset.
+    DataFrameMap Repair(const DataFrameMap& data, const DataFrameMap& cleanData,
+                        const Model& model, const AttrType& attrType);
 
     // Helper: repairs a single row (simulating repair_line)
-    Row repairLine(const Row& dataLine, int line,
-                   const Model& modelAll,
-                   const ModelDict& modelDict,
-                   const std::vector<std::string>& nodeListSort,
-                   const AttrType& attrType);
+    RowMap repairLine(const RowMap& dataLine, int line,
+                      const Model& modelAll,
+                      const ModelDict& modelDict,
+                      const std::vector<std::string>& nodeListSort,
+                      const AttrType& attrType);
 
-    // Pruning function: returns a list of attributes (nodes) that need repair
-    std::vector<std::string> prun(const Row& dataLine, int line,
+    // Pruning function: returns a list of attributes (nodes) that need repair.
+    std::vector<std::string> prun(const RowMap& dataLine, int line,
                                   const AttrType& attrType,
                                   const std::vector<std::string>& nodeList);
 
 private:
-    DataFrame dirtyData;  // original dirty data
-    DataFrame data;       // observed data
+    DataFrameMap dirtyData;  // original dirty data
+    DataFrameMap data;       // observed data
     Model model;          // main Bayesian network model (placeholder)
     ModelDict modelDict;  // additional models keyed by attribute
     std::vector<std::string> attrs;  // list of attribute names
@@ -76,7 +74,7 @@ private:
     int numWorker;
     double tuplePrun;
 
-    // Dictionary to record repair errors; key could be "line_attr"
+    // Dictionary to record repair errors; key format "line_attr"
     std::unordered_map<std::string, std::string> repairErr;
 };
 
