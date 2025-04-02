@@ -1,45 +1,141 @@
+// #ifndef COMPENSATIVE_H
+// #define COMPENSATIVE_H
+
+// #include <unordered_map>
+// #include <string>
+// #include <vector>
+// #include <map>
+
+// using std::string;
+// using std::vector;
+// using std::unordered_map;
+// using std::map;
+
+// using Row = unordered_map<string, string>;
+// using Data = vector<Row>;
+// using AttrType = map<string, map<string, string>>;
+
+// class Compensative {
+// public:
+//     Compensative(const Data& data, const AttrType& attrs_type);
+//     // Compensative(const DataFrame& data, const AttrType& attrs_type);
+
+
+//     void build();
+
+//     // ✅ Getters for BayesianClean to use
+//     const unordered_map<string,
+//         unordered_map<string,
+//             unordered_map<string, unordered_map<string, double>>>>& getOccurrenceList() const {
+//         return Occurrence_list;
+//     }
+
+//     const unordered_map<string,
+//         unordered_map<string,
+//             unordered_map<string,
+//                 unordered_map<string, int>>>>& getOccurrence1() const {
+//         return Occurrence_1;
+//     }
+
+//     const unordered_map<string,
+//         unordered_map<string, int>>& getFrequencyList() const {
+//         return Frequency_list;
+//     }
+
+// private:
+//     void occur_and_fre();
+//     void correlate(int row_index, const string& attr_main);
+//     bool isValid(const string& attr, const string& value);
+
+//     Data data;
+//     AttrType attrs_type;
+
+//     unordered_map<string,
+//         unordered_map<string,
+//             unordered_map<string, unordered_map<string, double>>>> Occurrence_list;
+
+//     // unordered_map<string,
+//     // unordered_map<string,
+//     //     unordered_map<string, unordered_map<string, int>>>> Occurrence_1;
+
+//     unordered_map<string,
+//     unordered_map<string,
+//         unordered_map<string,
+//             unordered_map<string, int>>>> occurrence_1;
+
+
+
+//     unordered_map<string,
+//         unordered_map<string, int>> Frequency_list;
+// };
+
+// #endif // COMPENSATIVE_H
+
 #ifndef COMPENSATIVE_H
 #define COMPENSATIVE_H
 
-#include <string>
 #include <unordered_map>
+#include <string>
 #include <vector>
 #include <map>
+#include "dataset.h"  // DataFrame and AttrInfo are defined here
+
+using std::string;
+using std::vector;
+using std::unordered_map;
+using std::map;
+
+using Row = unordered_map<string, string>;
+using Data = vector<Row>;
+// Update AttrType to match BayesianClean’s attribute type:
+using AttrType = map<string, AttrInfo>;
 
 class Compensative {
 public:
-    using AttrType = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
-    using Row = std::unordered_map<std::string, std::string>;
-    using Data = std::vector<Row>;
-
-    Compensative(const Data& data, const AttrType& attrs_type);
+    // Constructor now accepts a DataFrame and an AttrType (map<string, AttrInfo>)
+    Compensative(const DataFrame& dataFrame, const AttrType& attrs_type);
 
     void build();
 
-    const auto& getOccurrenceList() const { return Occurrence_list; }
-    const auto& getFrequencyList() const { return Frequency_list; }
-    const auto& getOccurrence1() const { return Occurrence_1; }
+    // Getters for BayesianClean to use
+    const unordered_map<string,
+        unordered_map<string,
+            unordered_map<string, unordered_map<string, double>>>>& getOccurrenceList() const {
+        return Occurrence_list;
+    }
+
+    const unordered_map<string,
+        unordered_map<string,
+            unordered_map<string,
+                unordered_map<string, int>>>>& getOccurrence1() const {
+        return Occurrence_1;
+    }
+
+    const unordered_map<string,
+        unordered_map<string, int>>& getFrequencyList() const {
+        return Frequency_list;
+    }
 
 private:
+    void occur_and_fre();
+    void correlate(int row_index, const string& attr_main);
+    bool isValid(const string& attr, const string& value);
+
     Data data;
     AttrType attrs_type;
 
-    std::unordered_map<std::string,
-        std::unordered_map<std::string,
-            std::unordered_map<std::string,
-                std::unordered_map<std::string, double>>>> Occurrence_list;
+    unordered_map<string,
+        unordered_map<string,
+            unordered_map<string, unordered_map<string, double>>>> Occurrence_list;
 
-    std::unordered_map<std::string,
-        std::unordered_map<std::string, int>> Frequency_list;
+    // Occurrence_1 uses a 4-level nested unordered_map:
+    unordered_map<string,
+        unordered_map<string,
+            unordered_map<string,
+                unordered_map<string, int>>>> Occurrence_1;
 
-    std::unordered_map<std::string,
-        std::unordered_map<std::string,
-            std::unordered_map<std::string,
-                std::unordered_map<std::string, int>>>> Occurrence_1;
-
-    void occur_and_fre();
-    void correlate(int row_index, const std::string& attr_main);
-    bool isValid(const std::string& attr, const std::string& value);
+    unordered_map<string,
+        unordered_map<string, int>> Frequency_list;
 };
 
 #endif // COMPENSATIVE_H

@@ -7,6 +7,7 @@
 #include <thread>
 #include "../dataset.h"
 #include "../include/UserConstraints.h" // Include UC class header
+#include "../BayesianClean.h"
 using namespace std;
 
 int main()
@@ -119,46 +120,77 @@ int main()
     // **Call get_real_data() correctly**
     dirty_data = dataset.get_real_data(dirty_data, attr_type);
     clean_data = dataset.get_real_data(dirty_data, attr_type);
-    // Print column headers
-    cout << "get real data: ";
-    for (const auto &col : dirty_data.columns)
-    {
-        cout << col << "\t";
-    }
-    cout << endl;
 
-    for (const auto &row : dirty_data.rows)
-    {
-        for (const auto &cell : row)
-        {
-            cout << cell << "\t";
-        }
-        cout << endl;
-    }
-    cout << endl;
+
+    //=================debug for get_real_data======================
+    // Print column headers
+    // cout << "get real data: ";
+    // for (const auto &col : dirty_data.columns)
+    // {
+    //     cout << col << "\t";
+    // }
+    // cout << endl;
+
+    // for (const auto &row : dirty_data.rows)
+    // {
+    //     for (const auto &cell : row)
+    //     {
+    //         cout << cell << "\t";
+    //     }
+    //     cout << endl;
+    // }
+    // cout << endl;
+    //=================debug for get_real_data======================
 
     //================= Test pre_process_data =======================
     // Call pre_process_data to preprocess the dirty data for BN training and cleaning
-    cout << "Preprocessing the dirty data..." << endl;
-    DataFrame preprocessed_data = dataset.pre_process_data(dirty_data, attr_type);
+    // cout << "Preprocessing the dirty data..." << endl;
+    // DataFrame preprocessed_data = dataset.pre_process_data(dirty_data, attr_type);
 
-    // Print out the preprocessed data for verification
-    cout << "Preprocessed Data:" << endl;
-    for (const auto &col : preprocessed_data.columns)
-    {
-        cout << col << "\t";
-    }
-    cout << endl;
+    // // Print out the preprocessed data for verification
+    // cout << "Preprocessed Data:" << endl;
+    // for (const auto &col : preprocessed_data.columns)
+    // {
+    //     cout << col << "\t";
+    // }
+    // cout << endl;
 
-    for (const auto &row : preprocessed_data.rows)
-    {
-        for (const auto &cell : row)
-        {
-            cout << cell << "\t";
-        }
-        cout << endl;
-    }
+    // for (const auto &row : preprocessed_data.rows)
+    // {
+    //     for (const auto &cell : row)
+    //     {
+    //         cout << cell << "\t";
+    //     }
+    //     cout << endl;
+    // }
     //================= End of Test =======================
+
+    std::cout << "\n===== Instantiating BayesianClean for Compensative test =====\n";
+
+    BayesianClean model(
+        dirty_data,
+        clean_data,
+        "Compensative",   // inference strategy
+        0.5,              // tuple pruning
+        5,                // maxiter
+        2,                // num_worker
+        2,                // chunk size
+        "",               // model_path
+        "",               // model_save_path
+        attr_type,
+        false,            // fix_edge
+        "dummy"           // model_choice
+    );
+
+    // // Print compensative frequency list
+    // std::cout << "\n===== Frequency List from Compensative =====\n";
+    // for (const auto& [attr, valmap] : model.frequencyList) {
+    //     std::cout << attr << ":\n";
+    //     for (const auto& [val, freq] : valmap) {
+    //         std::cout << "  " << val << ": " << freq << "\n";
+    //     }
+    // }
+
 
     // // **Print cleaned DataFrame**
     // cout << "\nFiltered DataFrame after applying UC constraints:\n";
