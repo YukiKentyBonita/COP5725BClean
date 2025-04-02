@@ -32,6 +32,10 @@ struct DataFrame {
 struct AttrInfo {
     string pattern; // if empty then no regex is applied
     string type;    // e.g., "Numerical"
+    string allowNull;
+
+    AttrInfo(const string& pat = "", const string& typ = "", const string& nullOK = "N")
+        : pattern(pat), type(typ), allowNull(nullOK) {}
 };
 
 /*
