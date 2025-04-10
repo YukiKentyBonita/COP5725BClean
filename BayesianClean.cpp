@@ -28,6 +28,8 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
 
   std::cout << "+++++++++correlation computing++++++++" << std::endl;
   // Create Compensative with the processed DataFrame and attribute types.
+  dataLoader->print_dataframe(processedData);
+
   compensative = std::make_shared<Compensative>(processedData, attr_type);
   compensative->build();
   occurrenceList = compensative->getOccurrenceList();
@@ -39,7 +41,8 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
   // std::cout << "+++++++++correlation computing complete++++++++" << std::endl;
 
   structureLearning = std::make_shared<BNStructure>(processedData, model_path, model_choice, fix_edge, model_save_path);
-  auto bn_result = structureLearning->get_bn();
+  BNResult bn_result = structureLearning->get_bn();
+  structureLearning->print_bn_result(bn_result);
 
   // compensativeParameter = std::make_shared<CompensativeParameter>(attr_type, frequencyList, occurrenceList, bn_result.model, data);
 

@@ -6,6 +6,7 @@
 #include <map>
 #include <algorithm>
 #include <set>
+#include "BNStructure.h"
 
 using namespace std;
 
@@ -16,6 +17,34 @@ BNStructure::BNStructure(const DataFrame &data,
                          const string &model_save_path)
     : data(data), model_path(model_path), model_choice(model_choice), fix_edge(fix_edge), model_save_path(model_save_path) {}
 
+void BNStructure::print_bn_result(const BNResult &result)
+{
+    std::cout << "=== BNResult ===" << std::endl;
+
+    std::cout << "Full Graph:" << std::endl;
+    print_graph(result.full_graph); // 假设你有 print_graph 函数
+
+    std::cout << "Partition Graphs:" << std::endl;
+    for (const auto &pair : result.partition_graphs)
+    {
+        std::cout << "Partition: " << pair.first << std::endl;
+        print_graph(pair.second); // 同样假设你有 print_graph 函数
+    }
+}
+
+void BNStructure::print_graph(const BNGraph &graph)
+{
+    for (const auto &node : graph.adjacency_list)
+    {
+        std::cout << "Node: " << node.first << " -> ";
+        for (const auto &neighbor : node.second)
+        {
+            std::cout << neighbor << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
 BNResult BNStructure::get_bn()
 {
     vector<string> attributes;
@@ -23,6 +52,11 @@ BNResult BNStructure::get_bn()
     {
         for (size_t i = 0; i < data.rows[0].size(); ++i)
             attributes.push_back("Attr" + to_string(i));
+    }
+
+    for (const auto &attr : attributes)
+    {
+        std::cout << attr << std::endl;
     }
 
     BNGraph G;

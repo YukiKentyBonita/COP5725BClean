@@ -44,6 +44,9 @@ public:
                 const std::vector<Edge> &fix_edge,
                 const std::string &model_save_path = "");
 
+    void print_bn_result(const BNResult &result);
+    void print_graph(const BNGraph &graph);
+
     BNResult get_bn();
 
 private:

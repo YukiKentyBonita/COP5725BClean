@@ -177,8 +177,8 @@ int main()
         "",             // model_path
         "",             // model_save_path
         attr_type,
-        {},     // fix_edge
-        "dummy" // model_choice
+        {},    // fix_edge
+        "appr" // model_choice
     );
 
     // // Print compensative frequency list
