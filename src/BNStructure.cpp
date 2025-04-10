@@ -9,19 +9,19 @@
 
 using namespace std;
 
-BNStructure::BNStructure(const vector<vector<string>> &data,
+BNStructure::BNStructure(const DataFrame &data,
                          const string &model_path,
                          const string &model_choice,
-                         const vector<Edge> &fix_edge,
+                         const std::vector<Edge> &fix_edge,
                          const string &model_save_path)
     : data(data), model_path(model_path), model_choice(model_choice), fix_edge(fix_edge), model_save_path(model_save_path) {}
 
 BNResult BNStructure::get_bn()
 {
     vector<string> attributes;
-    if (!data.empty())
+    if (!data.rows.empty())
     {
-        for (size_t i = 0; i < data[0].size(); ++i)
+        for (size_t i = 0; i < data.rows[0].size(); ++i)
             attributes.push_back("Attr" + to_string(i));
     }
 
@@ -107,16 +107,16 @@ BNResult BNStructure::get_bn()
     return result;
 }
 
-vector<Edge> BNStructure::get_rel(const vector<vector<string>> &data)
+vector<Edge> BNStructure::get_rel(const DataFrame &data)
 {
     vector<string> attrs;
-    if (!data.empty())
+    if (!data.rows.empty())
     {
-        for (size_t i = 0; i < data[0].size(); ++i)
+        for (size_t i = 0; i < data.rows[0].size(); ++i)
             attrs.push_back("Attr" + to_string(i));
     }
 
-    int n = data.size();
+    int n = data.rows.size();
     int m = attrs.size();
     int max_indegree = 2;
 
@@ -130,23 +130,23 @@ vector<Edge> BNStructure::get_rel(const vector<vector<string>> &data)
             if (i == j)
                 continue;
 
-            map<string, int> count_i, count_j, count_ij;
+            map<string, int> count_i, count_j;
+            map<pair<string, string>, int> count_ij;
 
             for (int k = 0; k < n; ++k)
             {
-                string vi = data[k][i];
-                string vj = data[k][j];
+                string vi = data.rows[k][i];
+                string vj = data.rows[k][j];
                 count_i[vi]++;
                 count_j[vj]++;
-                count_ij[vi + "|" + vj]++;
+                count_ij[{vi, vj}]++;
             }
 
             double mi = 0.0;
             for (const auto &p : count_ij)
             {
-                size_t pos = p.first.find("|");
-                string vi = p.first.substr(0, pos);
-                string vj = p.first.substr(pos + 1);
+                string vi = p.first.first;
+                string vj = p.first.second;
                 double p_ij = (double)p.second / n;
                 double p_i = (double)count_i[vi] / n;
                 double p_j = (double)count_j[vj] / n;
@@ -157,7 +157,7 @@ vector<Edge> BNStructure::get_rel(const vector<vector<string>> &data)
         }
     }
 
-    // 2. 每个节点选择互信息最高的 max_indegree 个父节点（避免反向边）
+    // 2. 每个节点选择互信息最高的 max_indegree 个父节点
     unordered_map<string, vector<pair<string, double>>> candidate_parents;
 
     for (const auto &entry : mi_map)
@@ -186,7 +186,7 @@ vector<Edge> BNStructure::get_rel(const vector<vector<string>> &data)
         {
             string parent = candidates[i].first;
 
-            // 检查是否已有 to -> parent，防止双向边
+            // 防止双向边
             bool conflict = false;
             for (const auto &e : final_edges)
             {

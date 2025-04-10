@@ -13,42 +13,42 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
                              string model_path,
                              string model_save_path,
                              map<string, AttrInfo> attr_type,
-                             bool fix_edge,
+                             vector<Edge> fix_edge,
                              string model_choice)
     : dirty_data(dirty_df), clean_data(clean_df), infer_strategy(infer_strategy),
       tuple_prun(tuple_prun), maxiter(maxiter), num_worker(num_worker),
       chunksize(chunksize), model_path(model_path), model_save_path(model_save_path),
       attr_type(attr_type), fix_edge(fix_edge), model_choice(model_choice)
 {
-    std::cout << "+++++++++data loading++++++++" << std::endl;
-    // Create a Dataset loader and preprocess the data.
-    std::shared_ptr<Dataset> dataLoader = std::make_shared<Dataset>();
-    DataFrame processedData = dataLoader->pre_process_data(dirty_data, attr_type);
-    std::cout << "+++++++++data loading complete++++++++" << std::endl;
+  std::cout << "+++++++++data loading++++++++" << std::endl;
+  // Create a Dataset loader and preprocess the data.
+  std::shared_ptr<Dataset> dataLoader = std::make_shared<Dataset>();
+  DataFrame processedData = dataLoader->pre_process_data(dirty_data, attr_type);
+  std::cout << "+++++++++data loading complete++++++++" << std::endl;
 
-    std::cout << "+++++++++correlation computing++++++++" << std::endl;
-    // Create Compensative with the processed DataFrame and attribute types.
-    compensative = std::make_shared<Compensative>(processedData, attr_type);
-    compensative->build();
-    occurrenceList = compensative->getOccurrenceList();
-    frequencyList = compensative->getFrequencyList();
+  std::cout << "+++++++++correlation computing++++++++" << std::endl;
+  // Create Compensative with the processed DataFrame and attribute types.
+  compensative = std::make_shared<Compensative>(processedData, attr_type);
+  compensative->build();
+  occurrenceList = compensative->getOccurrenceList();
+  frequencyList = compensative->getFrequencyList();
 
-    // Now that occurrence_1 in BayesianClean is declared as a 4-level map,
-    // the assignment below is valid.
-    occurrence_1 = compensative->getOccurrence1();
-    // std::cout << "+++++++++correlation computing complete++++++++" << std::endl;
+  // Now that occurrence_1 in BayesianClean is declared as a 4-level map,
+  // the assignment below is valid.
+  occurrence_1 = compensative->getOccurrence1();
+  // std::cout << "+++++++++correlation computing complete++++++++" << std::endl;
 
-    // structureLearning = std::make_shared<BN_Structure>(data, model_path, model_save_path, model_choice, fix_edge);
-    // auto bn_result = structureLearning->getBN();
+  structureLearning = std::make_shared<BNStructure>(processedData, model_path, model_choice, fix_edge, model_save_path);
+  auto bn_result = structureLearning->get_bn();
 
-    // compensativeParameter = std::make_shared<CompensativeParameter>(attr_type, frequencyList, occurrenceList, bn_result.model, data);
+  // compensativeParameter = std::make_shared<CompensativeParameter>(attr_type, frequencyList, occurrenceList, bn_result.model, data);
 
-    // inference = std::make_shared<Inference>(dirty_data, data, bn_result.model, bn_result.model_dict, attr_type,
-    //                                         frequencyList, occurrence_1, compensativeParameter, infer_strategy);
+  // inference = std::make_shared<Inference>(dirty_data, data, bn_result.model, bn_result.model_dict, attr_type,
+  //                                         frequencyList, occurrence_1, compensativeParameter, infer_strategy);
 
-    // repair_list = inference->repair(data, clean_data, bn_result.model, attr_type);
+  // repair_list = inference->repair(data, clean_data, bn_result.model, attr_type);
 
-    // end_time = std::chrono::high_resolution_clock::now();
+  // end_time = std::chrono::high_resolution_clock::now();
 }
 
 // void BayesianClean::transformData(std::vector<std::vector<std::string>> &data)
