@@ -9,6 +9,7 @@
 #include <memory>
 #include "dataset.h"
 #include "Compensative.h"
+#include "CompensativeParameter.h"
 #include "BNStructure.h"
 // #include "Inference.h"
 // #include "CompensativeParameter.h"
@@ -49,6 +50,7 @@ private:
 
     std::shared_ptr<Dataset> dataLoader;
     std::shared_ptr<Compensative> compensative;
+    std::shared_ptr<CompensativeParameter> compensativeParameter;
     std::shared_ptr<BNStructure> structureLearning;
     // std::shared_ptr<Inference> inference;
     // std::shared_ptr<CompensativeParameter> compensativeParameter;

@@ -1,5 +1,6 @@
 #include "BayesianClean.h"
 #include "Compensative.h"
+#include "CompensativeParameter.h"
 #include "dataset.h"
 #include <iostream>
 #include <memory>
@@ -44,7 +45,72 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
   BNResult bn_result = structureLearning->get_bn();
   structureLearning->print_bn_result(bn_result);
 
-  // compensativeParameter = std::make_shared<CompensativeParameter>(attr_type, frequencyList, occurrenceList, bn_result.model, data);
+  compensativeParameter = std::make_shared<CompensativeParameter>(attr_type, 
+                                 frequencyList, 
+                                 occurrenceList, 
+                                 bn_result.full_graph, 
+                                 processedData);
+
+  std::cout << "\n=========== Running CompensativeParameter Tests ===========\n";
+
+  if (processedData.rows.empty()) {
+      std::cerr << "[Test] No data rows in processedData. Skipping test.\n";
+      return;
+  }
+
+  int row_index = 0;
+
+  // Convert vector<string> row to Row (unordered_map<string, string>)
+  Row row_map;
+  const vector<string>& col_names = processedData.columns;
+  const vector<string>& row_values = processedData.rows[row_index];
+  for (size_t i = 0; i < col_names.size(); ++i) {
+      if (i < row_values.size()) {
+          row_map[col_names[i]] = row_values[i];
+      }
+  }
+
+  // === Test 1: return_penalty ===
+  std::string test_attr = "";  // choose first valid attr with a non-empty value
+  for (const auto& [attr_name, info] : attr_type) {
+      if (row_map.find(attr_name) != row_map.end() && !row_map[attr_name].empty()) {
+          test_attr = attr_name;
+          break;
+      }
+  }
+  if (test_attr.empty()) {
+      std::cerr << "[Test] No suitable attribute found for testing return_penalty.\n";
+      return;
+  }
+  std::string obs = row_map[test_attr];
+  std::vector<std::string> prior_candidates;
+  for (const auto& [val, _] : frequencyList[test_attr]) {
+      prior_candidates.push_back(val);
+      if (prior_candidates.size() >= 5) break;  // limit to 5 for testing
+  }
+  std::cout << "[Test] Testing return_penalty for attribute: " << test_attr << ", observed: " << obs << "\n";
+  auto penalty_scores = compensativeParameter->return_penalty(obs, test_attr, row_index, row_map, prior_candidates);
+
+  std::cout << "→ return_penalty output:\n";
+  for (const auto& [cand, score] : penalty_scores) {
+      std::cout << "  " << cand << ": " << score << "\n";
+  }
+
+  // === Test 2: init_tf_idf ===
+  std::cout << "\n[Test] Initializing TF-IDF structure...\n";
+  compensativeParameter->init_tf_idf(col_names);
+
+  // === Test 3: return_penalty_test ===
+  std::cout << "[Test] Testing return_penalty_test for attribute: " << test_attr << "\n";
+  auto penalty_scores_tfidf = compensativeParameter->return_penalty_test(
+      obs, test_attr, row_index, row_map, prior_candidates, col_names);
+
+  std::cout << "→ return_penalty_test output (TF-IDF):\n";
+  for (const auto& [cand, score] : penalty_scores_tfidf) {
+      std::cout << "  " << cand << ": " << score << "\n";
+  }
+
+  std::cout << "\n=========== CompensativeParameter Tests Complete ===========\n";
 
   // inference = std::make_shared<Inference>(dirty_data, data, bn_result.model, bn_result.model_dict, attr_type,
   //                                         frequencyList, occurrence_1, compensativeParameter, infer_strategy);
