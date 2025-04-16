@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <map>
+#include "Compensative.h"
 
 // For Inference, we represent a row as an unordered_map from attribute names to values.
 using RowMap = std::unordered_map<std::string, std::string>;
@@ -18,7 +19,7 @@ using ModelDict = std::unordered_map<std::string, Model>;
 using CompensativeParameterType = int; // Placeholder.
 
 // For attribute type settings, assume a map from attribute name to a map of string settings.
-using AttrType = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+//using AttrType = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
 
 // FrequencyList and OccurrenceData are also placeholders.
 using FrequencyList = std::unordered_map<std::string, std::unordered_map<std::string, double>>;

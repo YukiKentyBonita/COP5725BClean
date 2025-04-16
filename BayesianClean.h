@@ -10,7 +10,9 @@
 #include "dataset.h"
 #include "Compensative.h"
 // #include "BNStructure.h"
-// #include "Inference.h"
+#include "Inference.h"
+#include "Cleaner.h"
+#include "BayesianNetwork.h"
 // #include "CompensativeParameter.h"
 // #include "BayesianNetwork.h"
 
