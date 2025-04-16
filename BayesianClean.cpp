@@ -110,14 +110,49 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
       std::cout << "  " << cand << ": " << score << "\n";
   }
 
+
+
   std::cout << "\n=========== CompensativeParameter Tests Complete ===========\n";
 
-  // inference = std::make_shared<Inference>(dirty_data, data, bn_result.model, bn_result.model_dict, attr_type,
-  //                                         frequencyList, occurrence_1, compensativeParameter, infer_strategy);
 
-  // repair_list = inference->repair(data, clean_data, bn_result.model, attr_type);
+    // --- convert DataFrame → DataMap (vector<unordered_map<string,string>>)
+    using Row    = std::unordered_map<std::string, std::string>;
+    using DataMap = std::vector<Row>;
 
-  // end_time = std::chrono::high_resolution_clock::now();
+    DataMap dirtyMap, processedMap;
+    // build dirtyMap
+    for (auto &vals : dirty_data.rows) {
+    Row r;
+    for (size_t j = 0; j < dirty_data.columns.size(); ++j)
+        r[ dirty_data.columns[j] ] = vals[j];
+    dirtyMap.push_back(std::move(r));
+    }
+    // build processedMap
+    for (auto &vals : processedData.rows) {
+    Row r;
+    for (size_t j = 0; j < processedData.columns.size(); ++j)
+        r[ processedData.columns[j] ] = vals[j];
+    processedMap.push_back(std::move(r));
+    }
+
+    inference = std::make_shared<Inference>(
+        /*dirtyData*/     dirtyMap,
+        /*processedData*/ processedMap,
+        /*model*/         bn_result.full_graph,
+        /*modelDict*/     bn_result.partition_graphs,
+        /*attrType*/      attr_type,
+        /*frequencyList*/ frequencyList,
+        /*occurrence1*/   occurrence_1,
+        /*compParam*/     compensativeParameter,
+        /*strategy*/      infer_strategy,
+        /*chunkSize*/     chunksize,
+        /*numWorker*/     num_worker,
+        /*tuplePrun*/     tuple_prun,
+                          true
+    );
+
+    repair_list = inference->repair(processedMap, clean_data, bn_result.full_graph, attr_type);
+    end_time = std::chrono::high_resolution_clock::now();
 }
 
 // void BayesianClean::transformData(std::vector<std::vector<std::string>> &data)

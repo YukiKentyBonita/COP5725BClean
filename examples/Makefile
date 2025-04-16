@@ -10,6 +10,9 @@ SRCS = \
     ../BayesianClean.cpp \
     ../dataset.cpp \
     ../src/CompensativeParameter.cpp \
+    ../src/Inference.cpp \
+    ../src/Cleaner.cpp \
+    ../src/BayesianNetwork.cpp \
     beers.cpp
 
 OBJS = $(SRCS:.cpp=.o)
