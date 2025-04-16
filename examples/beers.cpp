@@ -121,7 +121,6 @@ int main()
     dirty_data = dataset.get_real_data(dirty_data, attr_type);
     clean_data = dataset.get_real_data(dirty_data, attr_type);
 
-
     //=================debug for get_real_data======================
     // Print column headers
     // cout << "get real data: ";
@@ -170,16 +169,16 @@ int main()
     BayesianClean model(
         dirty_data,
         clean_data,
-        "Compensative",   // inference strategy
-        0.5,              // tuple pruning
-        5,                // maxiter
-        2,                // num_worker
-        2,                // chunk size
-        "",               // model_path
-        "",               // model_save_path
+        "Compensative", // inference strategy
+        0.5,            // tuple pruning
+        5,              // maxiter
+        2,              // num_worker
+        2,              // chunk size
+        "",             // model_path
+        "",             // model_save_path
         attr_type,
-        false,            // fix_edge
-        "dummy"           // model_choice
+        {},    // fix_edge
+        "appr" // model_choice
     );
 
     // // Print compensative frequency list
@@ -190,7 +189,6 @@ int main()
     //         std::cout << "  " << val << ": " << freq << "\n";
     //     }
     // }
-
 
     // // **Print cleaned DataFrame**
     // cout << "\nFiltered DataFrame after applying UC constraints:\n";

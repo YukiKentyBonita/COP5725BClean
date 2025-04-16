@@ -190,3 +190,57 @@ void Compensative::correlate(int row_index, const std::string& attr_main) {
         score = std::max(0.0, score);
     }
 }
+
+// Print frequencyList: unordered_map<string, unordered_map<string, int>>
+void Compensative::printFrequencyList(const unordered_map<string, unordered_map<string, int>>& frequencyList) {
+    std::cout << "=== Frequency List ===\n";
+    for (const auto& [attr, val_map] : frequencyList) {
+        std::cout << "Attribute: " << attr << "\n";
+        for (const auto& [val, freq] : val_map) {
+            std::cout << "  Value: " << val << " -> Freq: " << freq << "\n";
+        }
+    }
+    std::cout << std::endl;
+}
+
+// Print occurrence_1: unordered_map<string, unordered_map<string, unordered_map<string, unordered_map<string, int>>>>
+void Compensative::printOccurrence1(const unordered_map<string,
+        unordered_map<string,
+            unordered_map<string,
+                unordered_map<string, int>>>>& occurrence_1) {
+    std::cout << "=== Occurrence 1 ===\n";
+    for (const auto& [attr_main, v_map] : occurrence_1) {
+        std::cout << "Main Attribute: " << attr_main << "\n";
+        for (const auto& [val_main, attr_corr_map] : v_map) {
+            std::cout << "  Main Value: " << val_main << "\n";
+            for (const auto& [attr_corr, val_corr_map] : attr_corr_map) {
+                std::cout << "    Correlated Attr: " << attr_corr << "\n";
+                for (const auto& [val_corr, count] : val_corr_map) {
+                    std::cout << "      Val: " << val_corr << " -> Count: " << count << "\n";
+                }
+            }
+        }
+    }
+    std::cout << std::endl;
+}
+
+// Print occurrenceList: unordered_map<string, unordered_map<string, unordered_map<string, unordered_map<string, double>>>>
+void Compensative::printOccurrenceList(const unordered_map<string,
+        unordered_map<string,
+            unordered_map<string,
+                unordered_map<string, double>>>>& occurrenceList) {
+    std::cout << "=== Occurrence List ===\n";
+    for (const auto& [attr_main, v_map] : occurrenceList) {
+        std::cout << "Main Attribute: " << attr_main << "\n";
+        for (const auto& [val_main, attr_corr_map] : v_map) {
+            std::cout << "  Main Value: " << val_main << "\n";
+            for (const auto& [attr_corr, val_corr_map] : attr_corr_map) {
+                std::cout << "    Correlated Attr: " << attr_corr << "\n";
+                for (const auto& [val_corr, prob] : val_corr_map) {
+                    std::cout << "      Val: " << val_corr << " -> Prob: " << prob << "\n";
+                }
+            }
+        }
+    }
+    std::cout << std::endl;
+}

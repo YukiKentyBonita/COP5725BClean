@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <unordered_map>
+#include "dataset.h"
 
 // Directed edge
 struct Edge
@@ -37,16 +38,19 @@ struct BNResult
 class BNStructure
 {
 public:
-    BNStructure(const std::vector<std::vector<std::string>> &data,
+    BNStructure(const DataFrame &data,
                 const std::string &model_path,
                 const std::string &model_choice,
                 const std::vector<Edge> &fix_edge,
                 const std::string &model_save_path = "");
 
+    void print_bn_result(const BNResult &result);
+    void print_graph(const BNGraph &graph);
+
     BNResult get_bn();
 
 private:
-    std::vector<std::vector<std::string>> data;
+    DataFrame data;
     std::string model_path;
     std::string model_choice;
     std::string model_save_path;
@@ -55,7 +59,7 @@ private:
     BNGraph model;
     std::unordered_map<std::string, BNGraph> model_dict;
 
-    std::vector<Edge> get_rel(const std::vector<std::vector<std::string>> &data);
+    std::vector<Edge> get_rel(const DataFrame &data);
 };
 
 #endif // BNStructure_H

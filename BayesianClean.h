@@ -10,13 +10,12 @@
 #include "dataset.h"
 #include "Compensative.h"
 // #include "BNStructure.h"
-#include "Inference.h"
-#include "Cleaner.h"
-#include "BayesianNetwork.h"
+// #include "Inference.h"
 // #include "CompensativeParameter.h"
 // #include "BayesianNetwork.h"
 
-class BayesianClean {
+class BayesianClean
+{
 public:
     BayesianClean(DataFrame dirty_df,
                   DataFrame clean_df,
@@ -28,7 +27,7 @@ public:
                   std::string model_path = "",
                   std::string model_save_path = "",
                   std::map<std::string, AttrInfo> attr_type = {},
-                  bool fix_edge = false,
+                  std::vector<Edge> fix_edges = {},
                   std::string model_choice = "");
 
     // Other member functions...
@@ -38,7 +37,7 @@ private:
     DataFrame dirty_data;
     DataFrame clean_data;
     std::map<std::string, AttrInfo> attr_type;
-    bool fix_edge;
+    std::vector<Edge> fix_edge;
     std::string model_path;
     std::string model_save_path;
     std::string model_choice;
@@ -50,22 +49,26 @@ private:
 
     std::shared_ptr<Dataset> dataLoader;
     std::shared_ptr<Compensative> compensative;
-    // std::shared_ptr<BNStructure> structureLearning;
+    std::shared_ptr<CompensativeParameter> compensativeParameter;
+    std::shared_ptr<BNStructure> structureLearning;
     // std::shared_ptr<Inference> inference;
     // std::shared_ptr<CompensativeParameter> compensativeParameter;
 
     std::unordered_map<std::string,
-    std::unordered_map<std::string,
-        std::unordered_map<std::string,
-            std::unordered_map<std::string, double>>>> occurrenceList;
+                       std::unordered_map<std::string,
+                                          std::unordered_map<std::string,
+                                                             std::unordered_map<std::string, double>>>>
+        occurrenceList;
 
     std::unordered_map<std::string,
-    std::unordered_map<std::string, int>> frequencyList;
+                       std::unordered_map<std::string, int>>
+        frequencyList;
 
     unordered_map<string,
-    unordered_map<string,
-        unordered_map<string,
-            unordered_map<string, int>>>> occurrence_1;
+                  unordered_map<string,
+                                unordered_map<string,
+                                              unordered_map<string, int>>>>
+        occurrence_1;
 
     std::vector<std::string> repair_list;
 };
