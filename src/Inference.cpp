@@ -44,9 +44,13 @@ DataMap Inference::repair(const DataMap& /*data*/,
 
     std::cout << "Starting repair..." << std::endl;
 
+    //compParam_->build();
     // Build the list of attributes to consider
-    vector<string> nodes;
+    std::vector<std::string> nodes;
     for (auto &kv : attrType_) nodes.push_back(kv.first);
+
+    // init tf–idf only once
+    compParam_->init_tf_idf(nodes);
 
     // Copy & fill missing
     DataMap repairData = dirtyData_;
@@ -161,12 +165,13 @@ Row Inference::repairLine(const Row& dataLine,
             }
 
             // compensative penalty
-            auto penMap = compParam_->return_penalty(
+            auto penMap = compParam_->return_penalty_test(
                               dataLine.at(attr), 
                               attr,
                               line,
                               dataLine,
-                              candidates);
+                              candidates,
+                              nodeList);
             double compS = 0.0;
             auto itp = penMap.find(v);
             if (itp != penMap.end())
