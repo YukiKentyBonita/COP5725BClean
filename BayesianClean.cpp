@@ -53,8 +53,6 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
                                  occurrenceList, 
                                  bn_result.full_graph, 
                                  processedData);
-    // build the TF–IDF index just once:
-    //compensativeParameter->init_tf_idf(processedData.columns);
 
   std::cout << "\n=========== Running CompensativeParameter Tests ===========\n";
 
