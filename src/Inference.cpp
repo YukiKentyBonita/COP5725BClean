@@ -200,6 +200,20 @@ Row Inference::repairLine(const Row& dataLine,
         }
     }
 
+    // // In repairLine
+    // auto isValid=[&](const std::string&val){…};
+
+    // for (auto &c: scored) {
+    //     if (!isValid(c.val)) continue;
+
+    //     if (repaired[attr] != c.val) {
+    //         repairedCells_[{line, attr}] = {repaired[attr], c.val};
+    //     }
+    //     repaired[attr] = c.val;
+    //     break;
+    // }
+
+
     return repaired;
 }
 

@@ -49,6 +49,12 @@ public:
                    const BNGraph&   fullGraph,
                    const AttrType&  attrType);
 
+    // // Inference.h
+    // std::unordered_map<std::pair<int,std::string>,
+    //                 std::pair<std::string,std::string>,
+    //                 boost::hash<std::pair<int,std::string>>> repairedCells_;
+    // const auto& getRepairLog() const { return repairedCells_; }
+
 private:
     Row repairLine(const Row&                       dataLine,
                    int                                line,

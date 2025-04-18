@@ -94,6 +94,14 @@
 #include <cmath>
 #include <algorithm>
 
+static inline std::string canonical(std::string s) {
+    std::string out;
+    for(char ch:s)
+        if(!std::isspace(static_cast<unsigned char>(ch)) && ch!='%')
+            out.push_back(std::tolower(static_cast<unsigned char>(ch)));
+    return out;
+}
+
 Compensative::Compensative(const DataFrame& dataFrame, const AttrType& attrs_type)
     : attrs_type(attrs_type)
 {

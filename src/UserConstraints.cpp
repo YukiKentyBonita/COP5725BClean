@@ -239,14 +239,25 @@ std::string UC::discover_pattern_in_column(const std::string& col) {
     }
 
     // Define candidate regex patterns.
+    // std::vector<std::pair<std::string, std::regex>> candidates = {
+    //     {"\\d+(\\.\\d+)?", std::regex("^\\d+(\\.\\d+)?$")},                  // Numeric (integer or float)
+    //     {"[A-Za-z]+", std::regex("^[A-Za-z]+$")},                             // Alphabetical only
+    //     {"[A-Za-z0-9]+", std::regex("^[A-Za-z0-9]+$")},                       // Alphanumeric
+    //     {"\\d{4}-\\d{2}-\\d{2}", std::regex("^\\d{4}-\\d{2}-\\d{2}$")},       // Date in YYYY-MM-DD
+    //     {"\\w+@\\w+\\.\\w+", std::regex("^\\w+@\\w+\\.\\w+$")},               // Email (simple)
+    //     {"[A-Za-z\\.\\s]+", std::regex("^[A-Za-z\\.\\s]+$")}                  // Allow letters, dots, and spaces
+    // };
+
     std::vector<std::pair<std::string, std::regex>> candidates = {
-        {"\\d+(\\.\\d+)?", std::regex("^\\d+(\\.\\d+)?$")},                  // Numeric (integer or float)
-        {"[A-Za-z]+", std::regex("^[A-Za-z]+$")},                             // Alphabetical only
-        {"[A-Za-z0-9]+", std::regex("^[A-Za-z0-9]+$")},                       // Alphanumeric
-        {"\\d{4}-\\d{2}-\\d{2}", std::regex("^\\d{4}-\\d{2}-\\d{2}$")},       // Date in YYYY-MM-DD
-        {"\\w+@\\w+\\.\\w+", std::regex("^\\w+@\\w+\\.\\w+$")},               // Email (simple)
-        {"[A-Za-z\\.\\s]+", std::regex("^[A-Za-z\\.\\s]+$")}                  // Allow letters, dots, and spaces
-    };
+    {"\\d+(\\.\\d+)?%?", std::regex("^\\d+(\\.\\d+)?%?$")},            // Numeric (integer or float) with optional %
+    {"[A-Za-z]+", std::regex("^[A-Za-z]+$")},                          // Alphabetical only
+    {"[A-Za-z0-9]+", std::regex("^[A-Za-z0-9]+$")},                    // Alphanumeric
+    {"\\d{4}-\\d{2}-\\d{2}", std::regex("^\\d{4}-\\d{2}-\\d{2}$")},    // Date in YYYY-MM-DD
+    {"\\w+@\\w+\\.\\w+", std::regex("^\\w+@\\w+\\.\\w+$")},            // Email (simple)
+    {"[A-Za-z\\.\\s]+", std::regex("^[A-Za-z\\.\\s]+$")}               // Allow letters, dots, and spaces
+};
+
+
 
     // First, check for a perfect match.
     for (const auto &candidate : candidates) {

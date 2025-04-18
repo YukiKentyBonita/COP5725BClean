@@ -40,6 +40,9 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
   // the assignment below is valid.
   occurrence_1 = compensative->getOccurrence1();
   // std::cout << "+++++++++correlation computing complete++++++++" << std::endl;
+  // compensative->printFrequencyList(frequencyList);
+// compensative->printOccurrence1(occurrence_1);
+// compensative->printOccurrenceList(occurrenceList);
 
   structureLearning = std::make_shared<BNStructure>(processedData, model_path, model_choice, fix_edge, model_save_path);
   BNResult bn_result = structureLearning->get_bn();

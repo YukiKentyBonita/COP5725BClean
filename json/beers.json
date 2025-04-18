@@ -14,7 +14,7 @@
         "max_length": 300,
         "AllowNull": "N",
         "repairable": "Y",
-        "pattern": "\\d+\\.\\d+|(\\d+)"
+        "pattern": "^\\d+(\\.\\d+)?%?$"
     },
 
     "brewery_id": {
