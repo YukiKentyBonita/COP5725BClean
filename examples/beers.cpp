@@ -10,8 +10,27 @@
 #include "../BayesianClean.h"
 using namespace std;
 
-int main()
+int main(int argc, char* argv[])
 {
+    std::string versionName = "";
+
+    if (argc == 2) {
+        versionName = argv[1];
+    }
+
+    if (versionName.empty()) {
+        std::cout << "Running BClean: basic version without any optimizations." << std::endl;
+    } else if (versionName == "-UC") {
+        std::cout << "Running BClean-UC: variant without employing UCs." << std::endl;
+    } else if (versionName == "-PI") {
+        std::cout << "Running BCleanₚᵢ: variant with Partition Inference optimization." << std::endl;
+    } else if (versionName == "-PIP") {
+        std::cout << "Running BCleanₚᵢₚ: variant with Partition Inference and Pruning optimizations." << std::endl;
+    } else {
+        std::cout << "Unknown version argument: " << versionName << std::endl;
+        return 1; // exit with error
+    }
+
     Dataset dataset;
     // Paths to the dirty and clean data
     string dirty_path = "data/dirty.csv";
@@ -53,116 +72,96 @@ int main()
     // }
     //=================debug for dataset.cpp======================
 
-    // // Initialize UC (User Constraints) with dirty data
-    UC uc(dirty_data);
-    // **Calling build_from_json()**
-    cout << "Loading constraints from JSON file..." << endl;
-    uc.build_from_json(json_path); // Call build_from_json to load constraints from the JSON file
 
-    // **Print out the content of the JSON file (loaded into UC)**
-    // Print out the content of the JSON file (loaded into UC)
-    cout << "User Constraints after loading from JSON:" << endl;
-    auto updated_uc_data = uc.get_uc();
-    for (const auto &[key, value] : updated_uc_data)
-    {
-        cout << key << " : ";
-        for (const auto &[attr, val] : value)
+    map<string, AttrInfo> attr_type;
+    if (!(versionName == "-UC")) {
+        // Initialize UC (User Constraints) with dirty data
+        UC uc(dirty_data);
+
+        cout << "Loading constraints from JSON file..." << endl;
+        uc.build_from_json(json_path); // Call build_from_json to load constraints from the JSON file
+
+        // Print out the content of the JSON file (loaded into UC)
+        cout << "User Constraints after loading from JSON:" << endl;
+        auto updated_uc_data = uc.get_uc();
+        for (const auto &[key, value] : updated_uc_data)
         {
-            cout << attr << "=" << val << " ";
+            cout << key << " : ";
+            for (const auto &[attr, val] : value)
+            {
+                cout << attr << "=" << val << " ";
+            }
+            cout << endl;
+        }
+
+        // //Build user constraints for each attribute in the dirty data
+        // for (const auto& attr : dirty_data.columns) {
+        //     // Here, you can modify the type or values based on the attribute
+        //     uc.build(attr, "Categorical", "min_value", "max_value");  // Example for categorical
+        //     // You can also use specific types for different attributes based on your dataset
+        // }
+
+        // //Print the user constraints for each attribute
+        // auto uc_data = uc.get_uc();
+        // for (const auto& [key, value] : uc_data) {
+        //     cout << key << " : ";
+        //     for (const auto& [attr, val] : value) {
+        //         cout << attr << "=" << val << " ";
+        //     }
+        //     cout << endl;
+        // }
+
+        // Applying pattern discovery
+        cout << "Applying Pattern Discovery..." << endl;
+        auto patterns = uc.PatternDiscovery(); // Use UC's pattern discovery method
+        cout << "Pattern discovery: ";
+        for (const auto &pat : patterns)
+        {
+            cout << pat.first << ": " << pat.second << " ";
         }
         cout << endl;
-    }
 
-    // // Build user constraints for each attribute in the dirty data
-    // for (const auto& attr : dirty_data.columns) {
-    //     // Here, you can modify the type or values based on the attribute
-    //     uc.build(attr, "Categorical", "min_value", "max_value");  // Example for categorical
-    //     // You can also use specific types for different attributes based on your dataset
-    // }
+        // // Start timing the BayesianClean process
+        // auto start_time = chrono::high_resolution_clock::now();
 
-    // // Print the user constraints for each attribute
-    // auto uc_data = uc.get_uc();
-    // for (const auto& [key, value] : uc_data) {
-    //     cout << key << " : ";
-    //     for (const auto& [attr, val] : value) {
-    //         cout << attr << "=" << val << " ";
-    //     }
-    //     cout << endl;
-    // }
-
-    // Placeholder for applying pattern discovery (this will use UC functionality)
-    cout << "Applying Pattern Discovery..." << endl;
-    auto patterns = uc.PatternDiscovery(); // Use UC's pattern discovery method
-    cout << "Pattern discovery: ";
-    for (const auto &pat : patterns)
-    {
-        cout << pat.first << ": " << pat.second << " ";
-    }
-    cout << endl;
-
-    // // Start timing the BayesianClean process
-    // auto start_time = chrono::high_resolution_clock::now();
-
-    // Simulating repair data
-    map<string, AttrInfo> attr_type;
-    for (const auto &[col, constraints] : updated_uc_data)
-    {
-        if (constraints.find("type") != constraints.end())
+        // Simulating repair data
+        for (const auto &[col, constraints] : updated_uc_data)
         {
-            attr_type[col] = {constraints.at("type")}; // Extract type from UC
+            if (constraints.find("type") != constraints.end())
+            {
+                attr_type[col] = {constraints.at("type")}; // Extract type from UC
+            }
+            else
+            {
+                attr_type[col] = {"Unknown"}; // Ensure all attributes are included
+            }
         }
-        else
-        {
-            attr_type[col] = {"Unknown"}; // Ensure all attributes are included
-        }
+
+        // **Call get_real_data() correctly**
+        dirty_data = dataset.get_real_data(dirty_data, attr_type);
+        clean_data = dataset.get_real_data(clean_data, attr_type);
+
+        //=================debug for get_real_data======================
+        // Print column headers
+        // cout << "get real data: ";
+        // for (const auto &col : dirty_data.columns)
+        // {
+        //     cout << col << "\t";
+        // }
+        // cout << endl;
+
+        // for (const auto &row : dirty_data.rows)
+        // {
+        //     for (const auto &cell : row)
+        //     {
+        //         cout << cell << "\t";
+        //     }
+        //     cout << endl;
+        // }
+        // cout << endl;
+        //=================debug for get_real_data======================
+
     }
-
-    // **Call get_real_data() correctly**
-    dirty_data = dataset.get_real_data(dirty_data, attr_type);
-    clean_data = dataset.get_real_data(clean_data, attr_type);
-
-    //=================debug for get_real_data======================
-    // Print column headers
-    // cout << "get real data: ";
-    // for (const auto &col : dirty_data.columns)
-    // {
-    //     cout << col << "\t";
-    // }
-    // cout << endl;
-
-    // for (const auto &row : dirty_data.rows)
-    // {
-    //     for (const auto &cell : row)
-    //     {
-    //         cout << cell << "\t";
-    //     }
-    //     cout << endl;
-    // }
-    // cout << endl;
-    //=================debug for get_real_data======================
-
-    //================= Test pre_process_data =======================
-    // Call pre_process_data to preprocess the dirty data for BN training and cleaning
-    // cout << "Preprocessing the dirty data..." << endl;
-    // DataFrame preprocessed_data = dataset.pre_process_data(dirty_data, attr_type);
-
-    // // Print out the preprocessed data for verification
-    // cout << "Preprocessed Data:" << endl;
-    // for (const auto &col : preprocessed_data.columns)
-    // {
-    //     cout << col << "\t";
-    // }
-    // cout << endl;
-
-    // for (const auto &row : preprocessed_data.rows)
-    // {
-    //     for (const auto &cell : row)
-    //     {
-    //         cout << cell << "\t";
-    //     }
-    //     cout << endl;
-    // }
-    //================= End of Test =======================
 
     std::cout << "\n===== Instantiating BayesianClean for Compensative test =====\n";
 

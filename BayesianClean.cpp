@@ -83,7 +83,6 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
   }
   if (test_attr.empty()) {
       std::cerr << "[Test] No suitable attribute found for testing return_penalty.\n";
-      return;
   }
   std::string obs = row_map[test_attr];
   std::vector<std::string> prior_candidates;
