@@ -119,7 +119,7 @@ int main()
 
     // **Call get_real_data() correctly**
     dirty_data = dataset.get_real_data(dirty_data, attr_type);
-    clean_data = dataset.get_real_data(dirty_data, attr_type);
+    clean_data = dataset.get_real_data(clean_data, attr_type);
 
     //=================debug for get_real_data======================
     // Print column headers

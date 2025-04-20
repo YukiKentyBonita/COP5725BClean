@@ -70,6 +70,16 @@ DataMap Inference::repair(const DataMap& /*data*/,
             std::cout << (i+1) << " rows repaired\n";
     }
 
+        if (debug_) {
+        std::cout << "\n=== FINAL REPAIRED DATA ===\n";
+        for (size_t i = 0; i < repairData.size(); ++i) {
+            std::cout << "Row " << i << ": ";
+            for (auto &kv : repairData[i])
+                std::cout << kv.first << "=" << kv.second << "  ";
+            std::cout << '\n';
+        }
+    }
+
     return repairData;
 }
 
@@ -172,7 +182,13 @@ Row Inference::repairLine(const Row& dataLine,
             if (itp != penMap.end())
                 compS = itp->second;
 
-            double fS = bnLog + compS;
+            //double fS = bnLog + compS;
+            constexpr double LAMBDA = 6.0;
+            constexpr double EPS    = 1e-12; 
+            compS = std::max(compS, EPS);
+            double compLog = std::log(compS + EPS); 
+            double fS      = bnLog + LAMBDA * compLog;
+
             scored.push_back({ v, bnLog, compS, fS });
         }
 

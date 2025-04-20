@@ -472,6 +472,9 @@ CompensativeParameter::CompensativeParameter(const map<string, AttrInfo>& attr_t
 /*======================================================================
  *  return_penalty
  *====================================================================*/
+//--------------------------------------------------------------------
+//  CompensativeParameter::return_penalty
+//--------------------------------------------------------------------
 std::unordered_map<std::string, double>
 CompensativeParameter::return_penalty(const std::string &obs,
                                       const std::string &attr,
@@ -479,111 +482,112 @@ CompensativeParameter::return_penalty(const std::string &obs,
                                       const Row &row,
                                       const std::vector<std::string> &prior)
 {
-    std::unordered_map<std::string, double> score;
+    using std::string;
+    std::unordered_map<string,double> score;                 // result
     if (!occurrence.count(attr)) {
-        std::cout << "[DEBUG] Attribute '" << attr << "' not found in occurrence list.\n";
+        std::cout << "[DEBUG] Attribute '" << attr << "' not in occurrence list\n";
         return score;
     }
 
     //------------------------------------------------------------
-    // canonical observation
+    // 1) canonicalise the observation once
     //------------------------------------------------------------
-    std::string obs_norm = canonical(
+    string obs_norm = canonical(
         (obs == "A Null Cell" && attr_type.at(attr).allowNull == "N") ? "" : obs);
-    std::cout << "[DEBUG] Normalized observation: " << obs_norm << "\n";
+    std::cout << "[DEBUG] Normalized observation: " << obs_norm << '\n';
 
     //------------------------------------------------------------
-    // helpers: is the other attribute a parent / child?
+    // 2) helper: is <other> a parent/child of <attr>?
     //------------------------------------------------------------
-    auto is_related = [&](const std::string &other) -> bool {
-        if (model.adjacency_list.count(attr) && model.adjacency_list.at(attr).count(other))
-            return true;           // child
-        for (auto &kv : model.adjacency_list) {  // parent
+    auto is_related = [&](const string &other)->bool {
+        if (model.adjacency_list.count(attr) &&
+            model.adjacency_list.at(attr).count(other))          // child
+            return true;
+        for (auto &kv : model.adjacency_list)                    // parent
             if (kv.second.count(attr) && kv.first == other) return true;
-        }
         return false;
     };
 
     //------------------------------------------------------------
-    // Precompute domain & cooccurrence terms
+    // 3) compute a **raw** compensative score per candidate:
+    //        raw = (‖co‑occurrence‖₂ + 1)  /  (1 + edit‑distance)
     //------------------------------------------------------------
-    double tot_dom = 0, tot_co = 0;
-    std::unordered_map<std::string, double> dom_map, co_map;
-
-    std::cout << "[DEBUG] Start computing domain and co-occurrence terms.\n";
+    std::unordered_map<string,double> raw_map;
+    double tot_raw = 0.0;
 
     for (const auto &cand_raw : prior) {
-        std::string cand = canonical(cand_raw);
+        const string cand_norm = canonical(cand_raw);
 
-        // ----------------- domain term (edit distance) ----------------
-        int dist = levenshtein_distance(obs_norm, cand);
-        double dom_term = 1 + dist;
-        dom_map[cand_raw] = dom_term;
-        tot_dom += dom_term;
+        //---------------- domain distance -----------------
+        int dist = levenshtein_distance(obs_norm, cand_norm);
+        double dom_term = 1.0 + dist;
 
-        std::cout << "  [DEBUG] Candidate: " << cand_raw
-                  << ", Canonical: " << cand
-                  << ", Edit Distance: " << dist
-                  << ", Domain Term: " << dom_term << "\n";
-
-        // ----------------- co-occurrence vector (excluding related attrs) ----------------
+        //---------------- co‑occurrence -------------------
         std::vector<double> vec;
         for (const auto &ap : attr_type) {
-            const std::string &other = ap.first;
+            const string &other = ap.first;
             if (other == attr || is_related(other)) continue;
 
-            std::string other_val = canonical(row.at(other));
-            double w = 0;
+            const std::string other_val_raw = row.at(other);
+            const std::string other_val     = canonical(other_val_raw);
 
-            if (occurrence.at(attr).count(cand)) {
-                auto &other_map = occurrence.at(attr).at(cand);
-                if (other_map.count(other)) {
-                    auto &value_map = other_map.at(other);
-                    if (value_map.count(other_val)) {
-                        w = value_map.at(other_val);
-                    }
+            double w = 0.0;
+            auto occ_cand_it = occurrence.at(attr).find(cand_norm);
+            if (occ_cand_it != occurrence.at(attr).end()) {
+                auto oth_it = occ_cand_it->second.find(other);
+                if (oth_it != occ_cand_it->second.end()) {
+                    auto val_it = oth_it->second.find(other_val);
+                    if (val_it != oth_it->second.end())
+                        w = val_it->second;
                 }
             }
             vec.push_back(w);
-            std::cout << "    [DEBUG] Co-Occurrence (" << other << ", " << other_val << ") weight: " << w << "\n";
+            std::cout << "    [DEBUG] Co-Occurrence (" << other << ", "
+                      << other_val << ") weight: " << w << '\n';
         }
 
-        double co = euclidean_norm(vec) + 1.0;  // +1 to avoid 0
-        co_map[cand_raw] = co;
-        tot_co += co;
+        constexpr double GAMMA = 1.5;
+        double co_norm = euclidean_norm(vec);          // avoid 0
+        double raw     = std::pow(1.0 + co_norm,  GAMMA) / std::pow(1.0 + dist,      1.0);               // <-- merge
+        raw_map[cand_raw] = raw;
+        tot_raw += raw;
 
-        std::cout << "  [DEBUG] Candidate: " << cand_raw
-                  << ", Co-Occurrence Norm +1: " << co << "\n";
+        std::cout << "  [DEBUG] Candidate: "   << cand_raw
+                  << ", Canonical: "           << cand_norm
+                  << ", Edit Distance: "       << dist
+                  << ", Domain Term: "         << dom_term
+                  << "\n  [DEBUG] Candidate: " << cand_raw
+                  << ", Co-Occurrence Norm +1: " << co_norm << '\n';
     }
 
-    std::cout << "[DEBUG] Total Domain Sum: " << tot_dom << ", Total Co-Occurrence Sum: " << tot_co << "\n";
+    std::cout << "[DEBUG] Total RAW sum: " << tot_raw << '\n';
 
     //------------------------------------------------------------
-    // Validity check and normalization
+    // 4) validity / pattern check  +  normalisation
     //------------------------------------------------------------
     const auto &meta = attr_type.at(attr);
     for (const auto &cand_raw : prior) {
         bool okNull = meta.allowNull == "Y" || cand_raw != "A Null Cell";
-        bool okPat = meta.pattern.empty() ||
-                     std::regex_search(canonical(cand_raw),
-                                       std::regex(meta.pattern));
+        bool okPat  = meta.pattern.empty() ||
+                      std::regex_search(canonical(cand_raw),
+                                         std::regex(meta.pattern));
+
+        double comp = tot_raw ? raw_map[cand_raw] / tot_raw : 0.0;
 
         if (!okNull) {
-            score[cand_raw] = 0.0;
-            std::cout << "[DEBUG] Candidate '" << cand_raw << "' invalid (okNull=" << okNull
-                    << ", okPat=" << okPat << "), score=0.\n";
+            comp = 0.0;
+            std::cout << "[DEBUG] Candidate '" << cand_raw
+                      << "' invalid (okNull=0, okPat=" << okPat << "), score=0.\n";
+        } else if (!okPat) {
+            comp *= 0.1;
+            std::cout << "[DEBUG] Candidate '" << cand_raw
+                      << "' soft penalized for pattern mismatch, normalized score: "
+                      << comp << '\n';
         } else {
-            double normalized = (tot_co != 0.0) ? (co_map[cand_raw] / tot_co) : 0.0;
-
-            if (!okPat) {
-                normalized *= 0.1; // Penalize but don't zero it
-                std::cout << "[DEBUG] Candidate '" << cand_raw << "' soft penalized for pattern mismatch, normalized score: " << normalized << "\n";
-            } else {
-                std::cout << "[DEBUG] Candidate '" << cand_raw << "' valid, normalized score: " << normalized << "\n";
-            }
-            score[cand_raw] = normalized;
+            std::cout << "[DEBUG] Candidate '" << cand_raw
+                      << "' valid, normalized score: " << comp << '\n';
         }
-
+        score[cand_raw] = comp;
     }
 
     std::cout << "[DEBUG] return_penalty finished.\n";
