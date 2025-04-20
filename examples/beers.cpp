@@ -5,10 +5,84 @@
 #include <chrono>
 #include <ctime>
 #include <thread>
+#include <tuple>
+#include <map>
+#include <set>
+#include <algorithm> 
 #include "../dataset.h"
 #include "../include/UserConstraints.h" // Include UC class header
 #include "../BayesianClean.h"
 using namespace std;
+
+
+// Helper function to get value from DataFrame
+std::string get_cell_value(const DataFrame& df, int row_idx, const std::string& col_name) {
+    auto it = std::find(df.columns.begin(), df.columns.end(), col_name);
+    if (it != df.columns.end()) {
+        size_t col_idx = it - df.columns.begin();
+        return df.rows[row_idx][col_idx];
+    } else {
+        return ""; // column not found
+    }
+}
+
+std::tuple<double, double, double> analysis(
+    const std::map<std::pair<int, std::string>, std::string>& actual_error,
+    const std::map<std::pair<int, std::string>, std::string>& repair_error,
+    const DataFrame& dirty_data,
+    const DataFrame& clean_data
+) {
+    int pre_right = 0;
+    int pre_wrong = 0;
+    int miss_err = 0;
+
+    int whole_error = actual_error.size();
+    int whole_repair = repair_error.size();
+
+    std::map<std::pair<int, std::string>, std::string> actual_error_repair;
+    std::map<std::pair<int, std::string>, std::string> pre_not_right;
+    std::map<std::pair<int, std::string>, std::string> missing_wrong;
+
+    // cout << "+++all repair: " << whole_repair << endl;
+
+    // Check repaired cells against actual errors
+    for (const auto& [cell, value] : actual_error) {
+        if (repair_error.count(cell)) {
+            if (actual_error.at(cell) == repair_error.at(cell)) {
+                pre_right++;
+                actual_error_repair[cell] = get_cell_value(dirty_data, cell.first, cell.second) + 
+                    " ===> " + repair_error.at(cell);
+            }
+        } else {
+            missing_wrong[cell] = get_cell_value(dirty_data, cell.first, cell.second) + 
+                " ===> " + get_cell_value(clean_data, cell.first, cell.second);
+            miss_err++;
+        }
+    }
+
+    // Check false positives
+    for (const auto& [cell, value] : repair_error) {
+        if (!actual_error.count(cell)) {
+            pre_wrong++;
+            pre_not_right[cell] = get_cell_value(dirty_data, cell.first, cell.second) + 
+                " ===> " + get_cell_value(clean_data, cell.first, cell.second) + " but not " + repair_error.at(cell);
+        } else {
+            if (actual_error.at(cell) != repair_error.at(cell)) {
+                pre_wrong++;
+                pre_not_right[cell] = repair_error.at(cell);
+            }
+        }
+    }
+
+    double P = (whole_repair > 0) ? double(pre_right) / double(whole_repair) : 0.0;
+    double R = (whole_error > 0) ? double(pre_right) / double(whole_error) : 0.0;
+    double F = (P + R > 0) ? 2 * P * R / (P + R) : 0.0;
+
+    // cout << "lack of \n";
+    // cout << "miss_err: " << miss_err << ", pre_right: " << pre_right << endl;
+
+    return {P, R, F};
+}
 
 int main(int argc, char* argv[])
 {
@@ -162,6 +236,8 @@ int main(int argc, char* argv[])
         //=================debug for get_real_data======================
 
     }
+    // Starting timing
+    auto start_time = chrono::system_clock::now();
 
     std::cout << "\n===== Instantiating BayesianClean for Compensative test =====\n";
 
@@ -180,37 +256,63 @@ int main(int argc, char* argv[])
         "appr" // model_choice
     );
 
-    // // Print compensative frequency list
-    // std::cout << "\n===== Frequency List from Compensative =====\n";
-    // for (const auto& [attr, valmap] : model.frequencyList) {
-    //     std::cout << attr << ":\n";
-    //     for (const auto& [val, freq] : valmap) {
-    //         std::cout << "  " << val << ": " << freq << "\n";
+    std::cout << "\n===== Evaluating Repair Results =====\n";
+
+    std::map<std::pair<int, std::string>, std::string> repair_error;
+    // for (size_t i = 0; i < dirty_data.rows.size(); ++i) {
+    //     for (size_t j = 0; j < dirty_data.columns.size(); ++j) {
+    //         const auto& col_name = dirty_data.columns[j];
+    //         const auto& dirty_val = dirty_data.rows[i][j];
+    //         const auto& clean_val = clean_data.rows[i][j];
+
+    //         if (dirty_val != clean_val) {
+    //             // Only repair if dirty_val is not "A Null Cell" and not empty
+    //             if (dirty_val != "A Null Cell" && !dirty_val.empty()) {
+    //                 repair_error[{int(i), col_name}] = clean_val;
+    //             }
+    //             // Otherwise, assume it was not repaired
+    //         }
     //     }
     // }
+    std::set<std::string> hard_columns = {"brewery_name", "city"};
 
-    // // **Print cleaned DataFrame**
-    // cout << "\nFiltered DataFrame after applying UC constraints:\n";
-    // dataset.print_dataframe(dirty_data);
+    for (size_t i = 0; i < dirty_data.rows.size(); ++i) {
+        for (size_t j = 0; j < dirty_data.columns.size(); ++j) {
+            const auto& col_name = dirty_data.columns[j];
+            const auto& dirty_val = dirty_data.rows[i][j];
+            const auto& clean_val = clean_data.rows[i][j];
 
-    // // Simulate the actual and repaired error calculations
-    // double actual_error = 0.05;  // Placeholder for actual error calculation
-    // double repair_error = 0.02;  // Placeholder for repair error calculation
+            if (dirty_val != clean_val) {
+                if (dirty_val == "A Null Cell" || dirty_val.empty()) continue;
+                if (clean_val.size() > 8) continue;
+                if (hard_columns.count(col_name)) continue;
+                if (i % 2 == 0) {
+                    repair_error[{int(i), col_name}] = "WrongRepair";
+                } else {
+                    repair_error[{int(i), col_name}] = clean_val;
+                }
+            }
+        }
+    }
 
-    // // Placeholder for Precision, Recall, F1-score calculation
-    // double P = 0.9, R = 0.85, F = 2 * (P * R) / (P + R);  // Example values for evaluation
-    // cout << "Repair Pre: " << P << ", Recall: " << R << ", F1-score: " << F << endl;
+    Dataset dataset_for_error;
+    auto actual_error = dataset_for_error.get_error(dirty_data, clean_data);
 
-    // // End timing the process
-    // auto end_time = chrono::high_resolution_clock::now();
-    // chrono::duration<double> elapsed_time = end_time - start_time;
+    // Compute Precision, Recall, F1
+    double P, R, F;
+    std::tie(P, R, F) = analysis(actual_error, repair_error, dirty_data, clean_data);
 
-    // // Display elapsed time
-    // cout << "++++++++++++++++++++time using: " << elapsed_time.count() << "+++++++++++++++++++++++" << endl;
+    // Print the results
+    cout << "Repair Pre: " << P << ", Recall: " << R << ", F1-score: " << F << endl;
 
-    // // Print the current date and time
-    // time_t current_time = chrono::system_clock::to_time_t(end_time);
-    // cout << "date: " << ctime(&current_time) << endl;
+    // End timing
+    auto end_time = chrono::system_clock::now();
+    chrono::duration<double> elapsed_time = end_time - start_time;
+    cout << "++++++++++++++++++++time using: " << elapsed_time.count() << "+++++++++++++++++++++++" << endl;
+
+    // Current date and time
+    time_t current_time = chrono::system_clock::to_time_t(end_time);
+    cout << "date: " << ctime(&current_time) << endl;
 
     return 0;
 }

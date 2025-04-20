@@ -32,8 +32,6 @@ public:
                   std::vector<Edge> fix_edges = {},
                   std::string model_choice = "");
 
-    // Other member functions...
-
 private:
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time, end_time;
     DataFrame dirty_data;
