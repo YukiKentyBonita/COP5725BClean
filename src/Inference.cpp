@@ -246,3 +246,55 @@ vector<string> Inference::prun(const Row& dataLine,
     }
     return out;
 }
+
+
+// vector<string> Inference::prun(const Row& dataLine,
+//                                int /*line*/,
+//                                const AttrType& /*attrType*/,
+//                                const vector<string>& nodeList)
+// {
+//     vector<string> toRepair;
+//     for (auto &attr : nodeList) {
+//         const string& obs = dataLine.at(attr);
+//         // compute average co‐occurrence
+//         vector<double> scores;
+//         for (auto &other : nodeList) {
+//             if (other==attr) continue;
+//             const string& otherObs = dataLine.at(other);
+
+//             // joint count
+//             int joint = 0;
+//             auto ita = occurrence1_.find(attr);
+//             if (ita!=occurrence1_.end()) {
+//                 auto itv = ita->second.find(obs);
+//                 if (itv!=ita->second.end()) {
+//                     auto itp = itv->second.find(other);
+//                     if (itp!=itv->second.end()) {
+//                         auto itq = itp->second.find(otherObs);
+//                         if (itq!=itp->second.end()) joint = itq->second;
+//                     }
+//                 }
+//             }
+
+//             // marginal freq
+//             int marg = 0;
+//             auto itf = frequencyList_.find(other);
+//             if (itf!=frequencyList_.end()) {
+//                 auto itm = itf->second.find(otherObs);
+//                 if (itm!=itf->second.end()) marg = itm->second;
+//             }
+
+//             scores.push_back(marg>0 ? double(joint)/marg : 0.0);
+//         }
+
+//         double avg = scores.empty()
+//                    ? 0.0
+//                    : std::accumulate(scores.begin(), scores.end(), 0.0)
+//                      / scores.size();
+
+//         // repair if null *or* co‐occurrence drops
+//         if (obs=="A Null Cell" || avg < tuplePrun_)
+//             toRepair.push_back(attr);
+//     }
+//     return toRepair;
+// }
