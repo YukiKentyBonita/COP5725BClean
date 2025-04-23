@@ -10,7 +10,7 @@
 #include <set>
 #include <algorithm> 
 #include "../dataset.h"
-#include "../include/UserConstraints.h" // Include UC class header
+#include "../include/UserConstraints.h"
 #include "../BayesianClean.h"
 using namespace std;
 
@@ -42,8 +42,6 @@ std::tuple<double, double, double> analysis(
     std::map<std::pair<int, std::string>, std::string> actual_error_repair;
     std::map<std::pair<int, std::string>, std::string> pre_not_right;
     std::map<std::pair<int, std::string>, std::string> missing_wrong;
-
-    // cout << "+++all repair: " << whole_repair << endl;
 
     // Check repaired cells against actual errors
     for (const auto& [cell, value] : actual_error) {
@@ -77,9 +75,6 @@ std::tuple<double, double, double> analysis(
     double P = (whole_repair > 0) ? double(pre_right) / double(whole_repair) : 0.0;
     double R = (whole_error > 0) ? double(pre_right) / double(whole_error) : 0.0;
     double F = (P + R > 0) ? 2 * P * R / (P + R) : 0.0;
-
-    // cout << "lack of \n";
-    // cout << "miss_err: " << miss_err << ", pre_right: " << pre_right << endl;
 
     return {P, R, F};
 }
@@ -115,38 +110,6 @@ int main(int argc, char* argv[])
     DataFrame dirty_data = dataset.get_data(dirty_path);
     DataFrame clean_data = dataset.get_data(clean_path);
 
-    //=================debug for dataset.cpp======================
-    // // Print the dirty data
-    // cout << "Dirty Data:" << endl;
-    // // Print column headers
-    // for (const auto& col : dirty_data.columns) {
-    //     cout << col << "\t";
-    // }
-    // cout << endl;
-
-    // for (const auto& row : dirty_data.rows) {
-    //     for (const auto& cell : row) {
-    //         cout << cell << "\t";
-    //     }
-    //     cout << endl;
-    // }
-
-    // // Similarly, print the clean data (optional debugging step)
-    // cout << "\nClean Data:" << endl;
-    // for (const auto& col : clean_data.columns) {
-    //     cout << col << "\t";
-    // }
-    // cout << endl;
-
-    // for (const auto& row : clean_data.rows) {
-    //     for (const auto& cell : row) {
-    //         cout << cell << "\t";
-    //     }
-    //     cout << endl;
-    // }
-    //=================debug for dataset.cpp======================
-
-
     map<string, AttrInfo> attr_type;
     if (!(versionName == "-UC")) {
         // Initialize UC (User Constraints) with dirty data
@@ -155,7 +118,7 @@ int main(int argc, char* argv[])
         cout << "Loading constraints from JSON file..." << endl;
         uc.build_from_json(json_path); // Call build_from_json to load constraints from the JSON file
 
-        // Print out the content of the JSON file (loaded into UC)
+        // Print out the content of the JSON file
         cout << "User Constraints after loading from JSON:" << endl;
         auto updated_uc_data = uc.get_uc();
         for (const auto &[key, value] : updated_uc_data)
@@ -168,23 +131,6 @@ int main(int argc, char* argv[])
             cout << endl;
         }
 
-        // //Build user constraints for each attribute in the dirty data
-        // for (const auto& attr : dirty_data.columns) {
-        //     // Here, you can modify the type or values based on the attribute
-        //     uc.build(attr, "Categorical", "min_value", "max_value");  // Example for categorical
-        //     // You can also use specific types for different attributes based on your dataset
-        // }
-
-        // //Print the user constraints for each attribute
-        // auto uc_data = uc.get_uc();
-        // for (const auto& [key, value] : uc_data) {
-        //     cout << key << " : ";
-        //     for (const auto& [attr, val] : value) {
-        //         cout << attr << "=" << val << " ";
-        //     }
-        //     cout << endl;
-        // }
-
         // Applying pattern discovery
         cout << "Applying Pattern Discovery..." << endl;
         auto patterns = uc.PatternDiscovery(); // Use UC's pattern discovery method
@@ -195,8 +141,6 @@ int main(int argc, char* argv[])
         }
         cout << endl;
 
-        // // Start timing the BayesianClean process
-        // auto start_time = chrono::high_resolution_clock::now();
 
         // Simulating repair data
         for (const auto &[col, constraints] : updated_uc_data)
@@ -214,26 +158,6 @@ int main(int argc, char* argv[])
         // **Call get_real_data() correctly**
         dirty_data = dataset.get_real_data(dirty_data, attr_type);
         clean_data = dataset.get_real_data(clean_data, attr_type);
-
-        //=================debug for get_real_data======================
-        // Print column headers
-        // cout << "get real data: ";
-        // for (const auto &col : dirty_data.columns)
-        // {
-        //     cout << col << "\t";
-        // }
-        // cout << endl;
-
-        // for (const auto &row : dirty_data.rows)
-        // {
-        //     for (const auto &cell : row)
-        //     {
-        //         cout << cell << "\t";
-        //     }
-        //     cout << endl;
-        // }
-        // cout << endl;
-        //=================debug for get_real_data======================
 
     }
     // Starting timing
@@ -259,21 +183,7 @@ int main(int argc, char* argv[])
     std::cout << "\n===== Evaluating Repair Results =====\n";
 
     std::map<std::pair<int, std::string>, std::string> repair_error;
-    // for (size_t i = 0; i < dirty_data.rows.size(); ++i) {
-    //     for (size_t j = 0; j < dirty_data.columns.size(); ++j) {
-    //         const auto& col_name = dirty_data.columns[j];
-    //         const auto& dirty_val = dirty_data.rows[i][j];
-    //         const auto& clean_val = clean_data.rows[i][j];
 
-    //         if (dirty_val != clean_val) {
-    //             // Only repair if dirty_val is not "A Null Cell" and not empty
-    //             if (dirty_val != "A Null Cell" && !dirty_val.empty()) {
-    //                 repair_error[{int(i), col_name}] = clean_val;
-    //             }
-    //             // Otherwise, assume it was not repaired
-    //         }
-    //     }
-    // }
     std::set<std::string> hard_columns = {"brewery_name", "city"};
 
     for (size_t i = 0; i < dirty_data.rows.size(); ++i) {
