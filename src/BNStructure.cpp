@@ -22,13 +22,13 @@ void BNStructure::print_bn_result(const BNResult &result)
     std::cout << "=== BNResult ===" << std::endl;
 
     std::cout << "Full Graph:" << std::endl;
-    print_graph(result.full_graph); // 假设你有 print_graph 函数
+    print_graph(result.full_graph);
 
     std::cout << "Partition Graphs:" << std::endl;
     for (const auto &pair : result.partition_graphs)
     {
         std::cout << "Partition: " << pair.first << std::endl;
-        print_graph(pair.second); // 同样假设你有 print_graph 函数
+        print_graph(pair.second);
     }
 }
 
@@ -154,7 +154,6 @@ vector<Edge> BNStructure::get_rel(const DataFrame &data)
     int m = attrs.size();
     int max_indegree = 2;
 
-    // 1. 计算所有互信息
     map<pair<string, string>, double> mi_map;
 
     for (int i = 0; i < m; ++i)
@@ -191,7 +190,6 @@ vector<Edge> BNStructure::get_rel(const DataFrame &data)
         }
     }
 
-    // 2. 每个节点选择互信息最高的 max_indegree 个父节点
     unordered_map<string, vector<pair<string, double>>> candidate_parents;
 
     for (const auto &entry : mi_map)
@@ -220,7 +218,6 @@ vector<Edge> BNStructure::get_rel(const DataFrame &data)
         {
             string parent = candidates[i].first;
 
-            // 防止双向边
             bool conflict = false;
             for (const auto &e : final_edges)
             {

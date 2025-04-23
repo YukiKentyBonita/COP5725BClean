@@ -26,7 +26,6 @@ struct Edge
 struct BNGraph
 {
     std::map<std::string, std::set<std::string>> adjacency_list;
-    
 };
 
 // Result of get_bn()
@@ -35,8 +34,6 @@ struct BNResult
     BNGraph full_graph;
     std::unordered_map<std::string, BNGraph> partition_graphs;
 };
-
-
 
 class BNStructure
 {
@@ -63,9 +60,6 @@ private:
     std::unordered_map<std::string, BNGraph> model_dict;
 
     std::vector<Edge> get_rel(const DataFrame &data);
-
-    // In BNStructure.h (or a new CPT‐holder class)
-
 };
 
 #endif // BNStructure_H
