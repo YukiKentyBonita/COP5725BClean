@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "dataset.h"  // DataFrame and AttrInfo are defined here
+#include "dataset.h"  // DataFrame and AttrInfo
 
 using std::string;
 using std::vector;
@@ -19,12 +19,11 @@ using std::map;
 
 using Row = unordered_map<string, string>;
 using Data = vector<Row>;
-// Update AttrType to match BayesianClean’s attribute type:
+// Update AttrType to match BayesianClean’s attribute type
 using AttrType = map<string, AttrInfo>;
 
 class Compensative {
 public:
-    // Constructor now accepts a DataFrame and an AttrType (map<string, AttrInfo>)
     Compensative(const DataFrame& dataFrame, const AttrType& attrs_type);
 
     void build();
@@ -75,7 +74,6 @@ private:
         unordered_map<string,
             unordered_map<string, unordered_map<string, double>>>> Occurrence_list;
 
-    // Occurrence_1 uses a 4-level nested unordered_map:
     unordered_map<string,
         unordered_map<string,
             unordered_map<string,

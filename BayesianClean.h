@@ -14,8 +14,6 @@
 #include "CompensativeParameter.h"
 #include "BayesianNetwork.h"
 
-//using DataMap = Inference::DataMap;
-
 class BayesianClean
 {
 public:
@@ -55,7 +53,6 @@ private:
     std::shared_ptr<CompensativeParameter> compensativeParameter;
     std::shared_ptr<BNStructure> structureLearning;
     std::shared_ptr<Inference> inference;
-    // std::shared_ptr<CompensativeParameter> compensativeParameter;
 
     std::unordered_map<std::string,
                        std::unordered_map<std::string,
@@ -73,7 +70,6 @@ private:
                                               unordered_map<string, int>>>>
         occurrence_1;
 
-    //std::vector<std::string> repair_list;
 };
 
 #endif // BAYESIAN_CLEAN_H

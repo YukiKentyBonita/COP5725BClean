@@ -22,13 +22,13 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
       attr_type(attr_type), fix_edge(fix_edge), model_choice(model_choice)
 {
     std::cout << "+++++++++data loading++++++++" << std::endl;
-    // Create a Dataset loader and preprocess the data.
+    // Create a Dataset loader and preprocess the data
     std::shared_ptr<Dataset> dataLoader = std::make_shared<Dataset>();
     DataFrame processedData = dataLoader->pre_process_data(dirty_data, attr_type);
     std::cout << "+++++++++data loading complete++++++++" << std::endl;
 
     std::cout << "+++++++++correlation computing++++++++" << std::endl;
-    // Create Compensative with the processed DataFrame and attribute types.
+    // Create Compensative with the processed DataFrame and attribute types
     dataLoader->print_dataframe(processedData);
 
     compensative = std::make_shared<Compensative>(processedData, attr_type);
@@ -36,10 +36,7 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
     occurrenceList = compensative->getOccurrenceList();
     frequencyList = compensative->getFrequencyList();
 
-    // Now that occurrence_1 in BayesianClean is declared as a 4-level map,
-    // the assignment below is valid.
     occurrence_1 = compensative->getOccurrence1();
-    // std::cout << "+++++++++correlation computing complete++++++++" << std::endl;
     compensative->printFrequencyList(frequencyList);
     compensative->printOccurrence1(occurrence_1);
     compensative->printOccurrenceList(occurrenceList);
@@ -64,7 +61,6 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
 
     int row_index = 0;
 
-    // Convert vector<string> row to Row (unordered_map<string, string>)
     Row row_map;
     const vector<string> &col_names = processedData.columns;
     const vector<string> &row_values = processedData.rows[row_index];
@@ -96,7 +92,7 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
     {
         prior_candidates.push_back(val);
         if (prior_candidates.size() >= 5)
-            break; // limit to 5 for testing
+            break;
     }
     std::cout << "[Test] Testing return_penalty for attribute: " << test_attr << ", observed: " << obs << "\n";
     auto penalty_scores = compensativeParameter->return_penalty(obs, test_attr, row_index, row_map, prior_candidates);
@@ -124,7 +120,7 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
 
     std::cout << "\n=========== CompensativeParameter Tests Complete ===========\n";
 
-    // --- convert DataFrame → DataMap (vector<unordered_map<string,string>>)
+    // --- convert DataFrame → DataMap
     using Row = std::unordered_map<std::string, std::string>;
     using DataMap = std::vector<Row>;
 
@@ -164,65 +160,3 @@ BayesianClean::BayesianClean(DataFrame dirty_df, DataFrame clean_df,
     repair_list = inference->repair(processedMap, clean_data, bn_result.full_graph, attr_type);
     end_time = std::chrono::high_resolution_clock::now();
 }
-
-// void BayesianClean::transformData(std::vector<std::vector<std::string>> &data)
-// {
-//     for (auto &row : data)
-//     {
-//         for (auto &val : row)
-//         {
-//             if (val.empty())
-//             {
-//                 val = "A Null Cell";
-//             }
-//         }
-//     }
-// }
-
-// std::vector<std::vector<std::string>> BayesianClean::produceTrain(const std::vector<std::vector<std::string>> &data, const std::vector<std::string> &attrs)
-// {
-//     std::vector<std::vector<std::string>> filtered_data;
-//     for (const auto &row : data)
-//     {
-//         std::vector<std::string> filtered_row;
-//         for (const auto &attr : attrs)
-//         {
-//             auto it = std::find(attrs.begin(), attrs.end(), attr);
-//             if (it != attrs.end())
-//             {
-//                 filtered_row.push_back(row[std::distance(attrs.begin(), it)]);
-//             }
-//         }
-//         filtered_data.push_back(filtered_row);
-//     }
-//     return filtered_data;
-// }
-
-// double BayesianClean::occurrenceScore(const std::string &pred, const std::string &val, const std::string &attr_main,
-//                                       const std::unordered_map<std::string, std::string> &tuple, int t_id)
-// {
-//     double P_Ai = 1.0;
-//     std::string candidate = val.substr(attr_main.size() + 1);
-
-//     for (const auto &pair : tuple)
-//     {
-//         if (pair.first == attr_main)
-//             continue;
-
-//         std::string val_vice = pair.second;
-//         int occur = occurrenceList[attr_main][candidate][pair.first].count(val_vice) ? occurrenceList[attr_main][candidate][pair.first][val_vice] : 0;
-//         P_Ai *= (occur / (double)frequencyList[attr_main][candidate]);
-
-//         if (P_Ai == 0.0)
-//             break;
-//     }
-//     return P_Ai;
-// }
-
-// std::shared_ptr<BayesianNetwork> BayesianClean::reconstructNetwork(std::shared_ptr<BayesianNetwork> model,
-//                                                                    const std::vector<std::vector<std::string>> &train_data)
-// {
-//     auto next_iter_model = std::make_shared<BayesianNetwork>();
-//     // Implementation for BayesianNetwork reconstruction...
-//     return next_iter_model;
-// }

@@ -10,7 +10,7 @@ DataFrame Dataset::get_data(const string& path) {
         return df;
     }
     string line;
-    // Read header line and parse column names.
+    // Read header line and parse column names
     if (getline(file, line)) {
         stringstream ss(line);
         string col;
@@ -19,7 +19,7 @@ DataFrame Dataset::get_data(const string& path) {
             df.columns.push_back(col);
         }
     }
-    // Read remaining lines as rows.
+    // Read remaining lines as rows
     while (getline(file, line)) {
         vector<string> row;
         stringstream ss(line);
@@ -36,7 +36,7 @@ DataFrame Dataset::get_data(const string& path) {
     return df;
 }
 
-// Function to filter columns and replace missing values
+// Filter columns and replace missing values
 DataFrame Dataset::get_real_data(const DataFrame& data, const map<string, AttrInfo>& attr_type) {
     DataFrame df;
 
@@ -51,7 +51,7 @@ DataFrame Dataset::get_real_data(const DataFrame& data, const map<string, AttrIn
         colIndex[data.columns[i]] = i;
     }
 
-    // Copy rows, preserving only selected columns
+    // Copy rows
     for (const auto& row : data.rows) {
         vector<string> newRow;
         for (const auto& col : df.columns) {
@@ -60,7 +60,7 @@ DataFrame Dataset::get_real_data(const DataFrame& data, const map<string, AttrIn
                 value = row[colIndex[col]];
             }
             if (value.empty()) {
-                value = tags;  // Fill missing values with `tags`
+                value = tags;  // Fill missing values
             }
             newRow.push_back(value);
         }
@@ -69,7 +69,7 @@ DataFrame Dataset::get_real_data(const DataFrame& data, const map<string, AttrIn
     return df;
 }
 
-// Function to print DataFrame (for debugging)
+// Print DataFrame
 void Dataset::print_dataframe(const DataFrame& df) const {
     cout << "Filtered DataFrame:\n";
     for (const auto& col : df.columns) {
@@ -156,9 +156,9 @@ DataFrame Dataset::pre_process_data(const DataFrame& data, const map<string, Att
                                 val = to_string(num);
                             }
                         } catch (const std::invalid_argument& e) {
-                            // Handle invalid conversion
+            
                         } catch (const std::out_of_range& e) {
-                            // Handle out-of-range conversion
+                     
                         }
                     }
                     candidates.push_back(val);
@@ -173,7 +173,6 @@ DataFrame Dataset::pre_process_data(const DataFrame& data, const map<string, Att
 
         vector<vector<string>> new_rows = change_add_line(row, i, candidate_values_per_attr, attr_names, attrs);
         
-        // Efficiently append rows
         df_train.rows.reserve(df_train.rows.size() + new_rows.size());
         for (auto& new_row : new_rows) {
             df_train.rows.push_back(new_row);
